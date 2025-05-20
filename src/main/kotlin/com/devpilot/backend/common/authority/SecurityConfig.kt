@@ -43,7 +43,7 @@ class SecurityConfig(
                     ).hasRole("MEMBER")
                     .requestMatchers(
                         "/swagger-ui/**",
-                        "/v3/api-docs/**"
+                        "/v3/api-docs/**",
                     ).permitAll()
             }.exceptionHandling { it.authenticationEntryPoint(customAuthenticationEntryPoint()) }
             .addFilterBefore(

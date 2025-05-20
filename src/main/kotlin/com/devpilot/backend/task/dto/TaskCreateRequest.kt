@@ -1,12 +1,16 @@
 package com.devpilot.backend.task.dto
 
-import java.time.LocalDateTime
+import com.devpilot.backend.task.entity.TaskStatus
+import java.time.LocalDate
 
 data class TaskCreateRequest(
     val title: String,
     val description: String?,
     val tags: String?,
     val priority: Int?,
-    val dueDate: LocalDateTime?,
-    val estimatedTimeHours: Double?
+    val dueDate: LocalDate?,
+    val estimatedTimeHours: Double?,
+    val status: TaskStatus,
+    val parentId: Long? = null,
+    val projectId: Long? = null,
 )

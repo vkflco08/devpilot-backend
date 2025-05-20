@@ -45,4 +45,3 @@ node_modules
 .yml
 application.yml
 .properties
->>>>>>> 21dfbfb (feat: 기본 Task CRUD API 구현 완료)

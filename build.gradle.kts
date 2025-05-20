@@ -4,6 +4,8 @@ plugins {
 	id("org.springframework.boot") version "3.4.5"
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("plugin.jpa") version "1.9.25"
+	kotlin("plugin.serialization") version "1.9.22"
+	application
 }
 
 group = "com.devpilog"
@@ -40,6 +42,11 @@ dependencies {
 
 	// api rate limit - bucket4j
 	implementation("com.github.vladimir-bukhtoyarov:bucket4j-core:8.0.1")
+
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
+	implementation("com.squareup.okio:okio:3.7.0")
 }
 
 kotlin {
@@ -56,4 +63,23 @@ allOpen {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+application {
+	mainClass.set("com.devpilot.backend.DevpilotBackendApplicationKt")
+}
+
+tasks.register("runMcpServer") {
+	group = "application"
+	description = "Runs the MCP server"
+	doLast {
+		exec {
+			workingDir = projectDir
+			commandLine = listOf(
+				"${projectDir}/gradlew",
+				"run",
+				"--args=com.devpilot.backend.mcp.McpTaskServerMainKt"
+			)
+		}
+	}
 }

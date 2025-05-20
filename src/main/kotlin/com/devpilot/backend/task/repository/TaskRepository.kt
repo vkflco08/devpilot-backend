@@ -6,4 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository
 interface TaskRepository : JpaRepository<Task, Long> {
     fun findByIdAndMemberId(id: Long, memberId: Long): Task?
     fun findAllByMemberId(memberId: Long): List<Task>
+    fun findAllByProjectIdAndMemberId(projectId: Long, memberId: Long): List<Task>
 }

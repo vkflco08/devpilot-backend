@@ -5,10 +5,13 @@ import com.devpilot.backend.common.dto.CustomUser
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.task.dto.TaskCreateRequest
 import com.devpilot.backend.task.dto.TaskResponse
+import com.devpilot.backend.task.dto.TaskScheduleUpdateRequest
+import com.devpilot.backend.task.dto.TaskStatusUpdateRequest
+import com.devpilot.backend.task.dto.TaskTagUpdateRequest
+import com.devpilot.backend.task.dto.TaskTimeUpdateRequest
 import com.devpilot.backend.task.dto.TaskUpdateRequest
 import com.devpilot.backend.task.service.TaskService
 import jakarta.validation.Valid
-import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.*
 
@@ -50,12 +53,10 @@ class TaskController(
      * 전체 태스크 조회
      */
     @GetMapping
-    fun getAll(): BaseResponse<List<TaskResponse>> {
-        val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
-                ?: throw UserNotFoundException()
-
-        val response = taskService.getAllTasks(userId)
+    fun getAll(@RequestParam(required = false) projectId: Long?): BaseResponse<List<TaskResponse>> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            ?: throw UserNotFoundException()
+        val response = taskService.getAllTasks(userId, projectId)
         return BaseResponse.success(data = response)
     }
 
@@ -86,5 +87,49 @@ class TaskController(
 
         taskService.deleteTask(userId, id)
         return BaseResponse.success()
+    }
+
+    @PatchMapping("/{id}/status")
+    fun updateStatus(
+        @PathVariable id: Long,
+        @RequestBody request: TaskStatusUpdateRequest
+    ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            ?: throw UserNotFoundException()
+        val response = taskService.updateTaskStatus(userId, id, request.status)
+        return BaseResponse.success(data = response)
+    }
+
+    @PatchMapping("/{id}/tags")
+    fun updateTags(
+        @PathVariable id: Long,
+        @RequestBody request: TaskTagUpdateRequest
+    ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            ?: throw UserNotFoundException()
+        val response = taskService.updateTaskTags(userId, id, request.tags)
+        return BaseResponse.success(data = response)
+    }
+
+    @PatchMapping("/{id}/schedule")
+    fun updateSchedule(
+        @PathVariable id: Long,
+        @RequestBody request: TaskScheduleUpdateRequest
+    ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            ?: throw UserNotFoundException()
+        val response = taskService.updateTaskSchedule(userId, id, request)
+        return BaseResponse.success(data = response)
+    }
+
+    @PatchMapping("/{id}/time")
+    fun updateTime(
+        @PathVariable id: Long,
+        @RequestBody request: TaskTimeUpdateRequest
+    ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            ?: throw UserNotFoundException()
+        val response = taskService.updateTaskTime(userId, id, request)
+        return BaseResponse.success(data = response)
     }
 }
