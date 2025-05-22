@@ -21,22 +21,46 @@ data class MemberDtoRequest(
     private val _password: String?,
     @field:NotBlank
     @JsonProperty("name")
-    private val _name: String?,
+    private val _name: String,
     @field:NotBlank
     @field:Email
     @JsonProperty("email")
-    private val _email: String?,
+    private val _email: String,
+    @field:NotBlank
+    @JsonProperty("role")
+    private val _role: String,
+    @field:NotBlank
+    @field:Pattern(
+        regexp = "^01[016789]-\\d{3,4}-\\d{4}\$",
+        message = "전화번호 형식이 올바르지 않습니다. 예: 010-1234-5678"
+    )
+    @JsonProperty("phoneNumber")
+    private val _phoneNumber: String,
+    @field:NotBlank
+    @JsonProperty("department")
+    private val _department: String,
+    @field:NotBlank
+    @JsonProperty("description")
+    private val _description: String,
 ) {
     val loginId: String
         get() = _loginId!!
     val password: String
         get() = _password!!
     val name: String
-        get() = _name!!
+        get() = _name
     val email: String
-        get() = _email!!
+        get() = _email
+    val role: String
+        get() = _role
+    val phoneNumber: String
+        get() = _phoneNumber
+    val department: String
+        get() = _department
+    val description: String
+        get() = _description
 
-    fun toEntity(): Member = Member(id, loginId, password, name, email)
+    fun toEntity(): Member = Member(id, loginId, password, name, email, role, phoneNumber, department, description)
 }
 
 data class LoginDto(
@@ -59,6 +83,10 @@ data class MemberDtoResponse(
     val name: String,
     val email: String,
     val createdDate: LocalDateTime?,
+    val role: String,
+    val phoneNumber: String,
+    val department: String,
+    val description: String,
 )
 
 data class MemberProfileDtoRequest(
@@ -68,13 +96,21 @@ data class MemberProfileDtoRequest(
     @field:NotBlank(message = "이메일은 필수 항목입니다.")
     @field:Email(message = "유효하지 않은 이메일 형식입니다.")
     var email: String,
-    var profileImage: String? = null,
+//    var profileImage: String? = null,
     // 프로필 이미지 URL (선택)
+    var role: String,
+    var phoneNumber: String,
+    var department: String,
+    var description: String,
 ) {
     fun toEntity(existingMember: Member): Member =
         existingMember.apply {
             this.name = this@MemberProfileDtoRequest.name
             this.email = this@MemberProfileDtoRequest.email
-            this.profileImage = this@MemberProfileDtoRequest.profileImage
+//            this.profileImage = this@MemberProfileDtoRequest.profileImage
+            this.role = this@MemberProfileDtoRequest.role
+            this.phoneNumber = this@MemberProfileDtoRequest.phoneNumber
+            this.department = this@MemberProfileDtoRequest.department
+            this.description = this@MemberProfileDtoRequest.description
         }
 }

@@ -40,6 +40,7 @@ class SecurityConfig(
                     ).anonymous()
                     .requestMatchers(
                         "/api/tasks/**",
+                        "/api/member/**",
                     ).hasRole("MEMBER")
                     .requestMatchers(
                         "/swagger-ui/**",

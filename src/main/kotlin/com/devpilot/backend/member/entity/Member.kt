@@ -36,8 +36,16 @@ class Member(
     var name: String,
     @Column(nullable = false, length = 30)
     var email: String,
-    @Column(nullable = true)
-    var profileImage: String? = null,
+//    @Column(nullable = true)
+//    var profileImage: String? = null,
+    @Column(nullable = false, length = 30)
+    var role: String,
+    @Column(nullable = false, length = 15)
+    var phoneNumber: String,
+    @Column(nullable = false, length = 30)
+    var department: String,
+    @Column(nullable = false, length = 255)
+    var description: String,
 ) : BaseEntity() {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "member")
     val memberRole: List<MemberRole>? = null
@@ -49,6 +57,10 @@ class Member(
             name = this.name,
             email = this.email,
             createdDate = this.createdDate,
+            role = this.role,
+            phoneNumber = this.phoneNumber,
+            department = this.department,
+            description = this.description,
         )
 }
 

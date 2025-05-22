@@ -3,6 +3,7 @@ package com.devpilot.backend.member.service
 import com.devpilot.backend.common.authority.JwtTokenProvider
 import com.devpilot.backend.common.authority.TokenInfo
 import com.devpilot.backend.common.exception.InvalidInputException
+import com.devpilot.backend.common.exception.exceptions.DuplicateLoginIdException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.common.repository.MemberRefreshTokenRepository
 import com.devpilot.backend.common.service.SignService
@@ -40,7 +41,7 @@ class MemberService(
     fun signUp(memberDtoRequest: MemberDtoRequest): String {
         var member = memberRepository.findByLoginId(memberDtoRequest.loginId)
         if (member != null) {
-            throw InvalidInputException("loginId", "이미 등록된 ID 입니다.")
+            throw DuplicateLoginIdException()
         }
         member = memberDtoRequest.toEntity()
         memberRepository.save(member)
