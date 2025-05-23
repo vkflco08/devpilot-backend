@@ -90,17 +90,30 @@ data class MemberDtoResponse(
 )
 
 data class MemberProfileDtoRequest(
-    var id: Long? = null,
     @field:NotBlank(message = "이름은 필수 항목입니다.")
+    @JsonProperty("name")
     var name: String,
     @field:NotBlank(message = "이메일은 필수 항목입니다.")
     @field:Email(message = "유효하지 않은 이메일 형식입니다.")
+    @JsonProperty("email")
     var email: String,
 //    var profileImage: String? = null,
     // 프로필 이미지 URL (선택)
+    @field:NotBlank
+    @JsonProperty("role")
     var role: String,
+    @field:NotBlank
+    @field:Pattern(
+        regexp = "^01[016789]-\\d{3,4}-\\d{4}\$",
+        message = "전화번호 형식이 올바르지 않습니다. 예: 010-1234-5678"
+    )
+    @JsonProperty("phoneNumber")
     var phoneNumber: String,
+    @field:NotBlank
+    @JsonProperty("department")
     var department: String,
+    @field:NotBlank
+    @JsonProperty("description")
     var description: String,
 ) {
     fun toEntity(existingMember: Member): Member =

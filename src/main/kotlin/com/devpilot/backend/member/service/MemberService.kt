@@ -94,15 +94,26 @@ class MemberService(
     @Transactional
     fun saveMyInfo(
         memberProfileDtoRequest: MemberProfileDtoRequest,
+        userId: Long?
     ): MemberDtoResponse {
         val existingMember: Member =
-            memberRepository.findByIdOrNull(memberProfileDtoRequest.id)
+            memberRepository.findByIdOrNull(userId)
                 ?: throw UserNotFoundException()
 
-        memberProfileDtoRequest.toEntity(existingMember)
+        val updatedMember = memberProfileDtoRequest.toEntity(existingMember)
+        val savedMember = memberRepository.save(updatedMember)
 
-        // 변경 감지로 업데이트 수행
-        return existingMember.toDto()
+        return MemberDtoResponse(
+            id = savedMember.id!!,
+            loginId = savedMember.loginId,
+            name = savedMember.name,
+            email = savedMember.email,
+            role = savedMember.role,
+            createdDate = savedMember.createdDate,
+            description = savedMember.description,
+            department = savedMember.department,
+            phoneNumber = savedMember.phoneNumber,
+        )
     }
 
     /**

@@ -2,6 +2,7 @@ package com.devpilot.backend.task.dto
 
 import com.devpilot.backend.task.entity.TaskStatus
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class TaskResponse(
     val id: Long,
@@ -12,4 +13,6 @@ data class TaskResponse(
     val priority: Int?,
     val dueDate: LocalDate?,
     val estimatedTimeHours: Double?,
+    val createdDate: LocalDateTime?,
+    val lastModifiedDate: LocalDateTime?,
 )

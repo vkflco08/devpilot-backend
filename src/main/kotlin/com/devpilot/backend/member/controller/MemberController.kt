@@ -9,9 +9,7 @@ import com.devpilot.backend.member.dto.MemberDtoRequest
 import com.devpilot.backend.member.dto.MemberDtoResponse
 import com.devpilot.backend.member.dto.MemberProfileDtoRequest
 import com.devpilot.backend.member.service.MemberService
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.validation.Valid
-import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,7 +17,6 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -64,22 +61,16 @@ class MemberController(
     /**
      * 내 정보 수정
      */
-    @PutMapping("/info_edit", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    @PutMapping("/info_edit")
     fun saveMyInfo(
-        @RequestParam("memberProfileDtoRequest") memberProfileDtoRequest: String,
+        @RequestBody @Valid memberProfileDtoRequest: MemberProfileDtoRequest,
     ): BaseResponse<MemberDtoResponse> {
-        println("memberProfileDtoRequest: $memberProfileDtoRequest") // DTO 데이터 출력
-
-        val objectMapper = ObjectMapper()
-        val memberDto = objectMapper.readValue(memberProfileDtoRequest, MemberProfileDtoRequest::class.java)
-
         // 사용자 정보 처리
         val userId =
             (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
                 ?: throw UserNotFoundException()
-        memberDto.id = userId
 
-        val resultMsg = memberService.saveMyInfo(memberDto)
+        val resultMsg = memberService.saveMyInfo(memberProfileDtoRequest, userId)
         return BaseResponse.success(data = resultMsg)
     }
 

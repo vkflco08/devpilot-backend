@@ -2,6 +2,9 @@ package com.devpilot.backend.common.exception
 
 import com.devpilot.backend.common.dto.BaseResponse
 import com.devpilot.backend.common.exception.exceptions.DuplicateLoginIdException
+import com.devpilot.backend.common.exception.exceptions.ProjectNotFoundException
+import com.devpilot.backend.common.exception.exceptions.TaskNotFoundException
+import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -13,12 +16,40 @@ class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateLoginIdException::class)
     fun handleDuplicateLoginIdException(ex: DuplicateLoginIdException): ResponseEntity<BaseResponse<Nothing>> {
         val response = BaseResponse.error<Nothing>(
-            code = "DUPLICATE_LOGIN_ID",
-            message = ex.message ?: "이미 등록된 ID입니다.",
+            code = ex.resultCode,
+            message = ex.message,
             status = HttpStatus.CONFLICT.value()
         )
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
     }
 
-    // 다른 커스텀 예외 처리들도 여기에 추가 가능
+    @ExceptionHandler(ProjectNotFoundException::class)
+    fun handleProjectNotFoundException(ex: ProjectNotFoundException): ResponseEntity<BaseResponse<Nothing>> {
+        val response = BaseResponse.error<Nothing>(
+            code = ex.resultCode,
+            message = ex.message,
+            status = HttpStatus.CONFLICT.value()
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
+
+    @ExceptionHandler(TaskNotFoundException::class)
+    fun handleTaskNotFoundException(ex: TaskNotFoundException): ResponseEntity<BaseResponse<Nothing>> {
+        val response = BaseResponse.error<Nothing>(
+            code = ex.resultCode,
+            message = ex.message,
+            status = HttpStatus.CONFLICT.value()
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
+
+    @ExceptionHandler(UserNotFoundException::class)
+    fun handleUserNotFoundException(ex: UserNotFoundException): ResponseEntity<BaseResponse<Nothing>> {
+        val response = BaseResponse.error<Nothing>(
+            code = ex.resultCode,
+            message = ex.message,
+            status = HttpStatus.CONFLICT.value()
+        )
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response)
+    }
 }

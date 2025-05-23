@@ -39,7 +39,8 @@ class SecurityConfig(
                         "/api/auth/refresh",
                     ).anonymous()
                     .requestMatchers(
-                        "/api/tasks/**",
+                        "/api/task/**",
+                        "/api/project/**",
                         "/api/member/**",
                     ).hasRole("MEMBER")
                     .requestMatchers(

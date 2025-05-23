@@ -4,6 +4,9 @@ import com.devpilot.backend.common.exception.exceptions.ProjectNotFoundException
 import com.devpilot.backend.common.exception.exceptions.TaskNotFoundException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.repository.MemberRepository
+import com.devpilot.backend.project.dto.ProjectResponse
+import com.devpilot.backend.project.entity.Project
+import com.devpilot.backend.project.repository.ProjectRepository
 import com.devpilot.backend.task.dto.TaskCreateRequest
 import com.devpilot.backend.task.dto.TaskResponse
 import com.devpilot.backend.task.dto.TaskScheduleUpdateRequest
@@ -11,7 +14,6 @@ import com.devpilot.backend.task.dto.TaskTimeUpdateRequest
 import com.devpilot.backend.task.dto.TaskUpdateRequest
 import com.devpilot.backend.task.entity.Task
 import com.devpilot.backend.task.entity.TaskStatus
-import com.devpilot.backend.task.repository.ProjectRepository
 import com.devpilot.backend.task.repository.TaskRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -30,21 +32,15 @@ class TaskService(
         return task.toResponse()
     }
 
-    fun getAllTasks(userId: Long, projectId: Long?): List<TaskResponse> {
-        val tasks = if (projectId != null) {
-            taskRepository.findAllByProjectIdAndMemberId(projectId, userId)
-        } else {
-            taskRepository.findAllByMemberId(userId)
-        }
-        return tasks.map { it.toResponse() }
-    }
-
     @Transactional
     fun createTask(userId: Long, request: TaskCreateRequest): TaskResponse {
         val findMember = memberRepository.findByIdOrNull(userId)
             ?: throw UserNotFoundException()
-        val findProject = projectRepository.findByIdAndMemberId(request.projectId, userId)
-            ?: throw ProjectNotFoundException()
+        var findProject: Project? = null
+        if(request.projectId != null){
+            findProject = projectRepository.findByIdAndMemberId(request.projectId, userId)
+                ?: throw ProjectNotFoundException()
+        }
 
         val task = Task(
             member = findMember,
@@ -58,7 +54,18 @@ class TaskService(
             project = findProject
         )
         val saved = taskRepository.save(task)
-        return saved.toResponse()
+        return TaskResponse(
+            id = saved.id,
+            title = saved.title,
+            description = saved.description,
+            status = saved.status,
+            tags = saved.tags,
+            priority = saved.priority,
+            dueDate = saved.dueDate,
+            estimatedTimeHours = saved.estimatedTimeHours,
+            createdDate = saved.createdDate,
+            lastModifiedDate = saved.lastModifiedDate,
+        )
     }
 
     @Transactional
@@ -133,5 +140,25 @@ class TaskService(
         priority = priority,
         dueDate = dueDate,
         estimatedTimeHours = estimatedTimeHours,
+        createdDate = createdDate,
+        lastModifiedDate = lastModifiedDate,
     )
+
+    fun getAllTasks(userId: Long): List<TaskResponse>? {
+        val findTasks: List<Task> = taskRepository.findAllByMemberId(userId)
+        return findTasks.map { task ->
+            TaskResponse(
+                id = task.id,
+                title = task.title,
+                description = task.description,
+                status = task.status,
+                tags = task.tags,
+                priority = task.priority,
+                dueDate = task.dueDate,
+                estimatedTimeHours = task.estimatedTimeHours,
+                createdDate = task.createdDate,
+                lastModifiedDate = task.lastModifiedDate,
+            )
+        }
+    }
 }
