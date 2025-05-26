@@ -6,6 +6,7 @@ import java.time.LocalDateTime
 
 data class TaskResponse(
     val id: Long,
+    val projectId: Long?,
     val title: String,
     val description: String?,
     val status: TaskStatus,

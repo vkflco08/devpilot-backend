@@ -4,7 +4,6 @@ import com.devpilot.backend.common.exception.exceptions.ProjectNotFoundException
 import com.devpilot.backend.common.exception.exceptions.TaskNotFoundException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.repository.MemberRepository
-import com.devpilot.backend.project.dto.ProjectResponse
 import com.devpilot.backend.project.entity.Project
 import com.devpilot.backend.project.repository.ProjectRepository
 import com.devpilot.backend.task.dto.TaskCreateRequest
@@ -56,6 +55,7 @@ class TaskService(
         val saved = taskRepository.save(task)
         return TaskResponse(
             id = saved.id,
+            projectId = saved.project?.id,
             title = saved.title,
             description = saved.description,
             status = saved.status,
@@ -133,6 +133,7 @@ class TaskService(
 
     private fun Task.toResponse() = TaskResponse(
         id = id,
+        projectId = project?.id,
         title = title,
         description = description,
         status = status,
@@ -149,6 +150,7 @@ class TaskService(
         return findTasks.map { task ->
             TaskResponse(
                 id = task.id,
+                projectId = task.project?.id,
                 title = task.title,
                 description = task.description,
                 status = task.status,

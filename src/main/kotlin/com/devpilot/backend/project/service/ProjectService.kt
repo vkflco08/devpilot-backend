@@ -30,6 +30,7 @@ class ProjectService(
                 tasks = project.tasks.map { task ->
                     TaskResponse(
                         id = task.id,
+                        projectId = task.project?.id,
                         title = task.title,
                         description = task.description,
                         status = task.status,
@@ -77,6 +78,7 @@ class ProjectService(
             tasks = project.tasks.map { task ->
                 TaskResponse(
                     id = task.id,
+                    projectId = task.project?.id,
                     title = task.title,
                     description = task.description,
                     status = task.status,
