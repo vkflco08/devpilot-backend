@@ -6,12 +6,13 @@ import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
 import com.devpilot.backend.project.service.ProjectService
-import com.devpilot.backend.task.dto.TaskResponse
 import jakarta.validation.Valid
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -56,5 +57,34 @@ class ProjectController(
 
         val response = projectService.getTask(userId, projectId)
         return BaseResponse.success(data = response)
+    }
+
+    /**
+     * 프로젝트 수정
+     */
+    @PutMapping("/{id}")
+    fun update(
+        @PathVariable id: Long,
+        @RequestBody @Valid request: ProjectRequest
+    ): BaseResponse<ProjectResponse> {
+        val userId =
+            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+                ?: throw UserNotFoundException()
+
+        val response = projectService.updateProject(userId, id, request)
+        return BaseResponse.success(data = response)
+    }
+
+    /**
+     * 프로젝트 삭제
+     */
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: Long): BaseResponse<Unit> {
+        val userId =
+            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+                ?: throw UserNotFoundException()
+
+        projectService.deleteProject(userId, id)
+        return BaseResponse.success()
     }
 }

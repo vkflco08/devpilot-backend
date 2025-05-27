@@ -3,6 +3,7 @@ package com.devpilot.backend.task.entity
 import BaseEntity
 import com.devpilot.backend.member.entity.Member
 import com.devpilot.backend.project.entity.Project
+import com.devpilot.backend.task.dto.TaskResponse
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -52,7 +53,21 @@ data class Task(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     var project: Project? = null,
-): BaseEntity()
+): BaseEntity() {
+    fun toResponse() = TaskResponse(
+        id = id,
+        projectId = project?.id,
+        title = title,
+        description = description,
+        status = status,
+        tags = tags,
+        priority = priority,
+        dueDate = dueDate,
+        estimatedTimeHours = estimatedTimeHours,
+        createdDate = createdDate,
+        lastModifiedDate = lastModifiedDate,
+    )
+}
 
 enum class TaskStatus {
     TODO, DOING, DONE

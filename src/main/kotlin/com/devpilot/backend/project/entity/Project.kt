@@ -2,6 +2,7 @@ package com.devpilot.backend.project.entity
 
 import BaseEntity
 import com.devpilot.backend.member.entity.Member
+import com.devpilot.backend.project.dto.ProjectResponse
 import com.devpilot.backend.task.entity.Task
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
@@ -32,4 +33,15 @@ data class Project(
 
     @OneToMany(mappedBy = "project", cascade = [CascadeType.ALL], orphanRemoval = true)
     val tasks: MutableList<Task> = mutableListOf()
-): BaseEntity()
+): BaseEntity() {
+    fun toResponse(): ProjectResponse {
+        return ProjectResponse(
+            id = this.id,
+            name = this.name,
+            description = this.description,
+            tasks = this.tasks.map { task -> task.toResponse() },
+            createdDate = createdDate,
+            lastModifiedDate = lastModifiedDate,
+        )
+    }
+}

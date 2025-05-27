@@ -53,19 +53,7 @@ class TaskService(
             project = findProject
         )
         val saved = taskRepository.save(task)
-        return TaskResponse(
-            id = saved.id,
-            projectId = saved.project?.id,
-            title = saved.title,
-            description = saved.description,
-            status = saved.status,
-            tags = saved.tags,
-            priority = saved.priority,
-            dueDate = saved.dueDate,
-            estimatedTimeHours = saved.estimatedTimeHours,
-            createdDate = saved.createdDate,
-            lastModifiedDate = saved.lastModifiedDate,
-        )
+        return saved.toResponse()
     }
 
     @Transactional
@@ -131,36 +119,8 @@ class TaskService(
         return updated.toResponse()
     }
 
-    private fun Task.toResponse() = TaskResponse(
-        id = id,
-        projectId = project?.id,
-        title = title,
-        description = description,
-        status = status,
-        tags = tags,
-        priority = priority,
-        dueDate = dueDate,
-        estimatedTimeHours = estimatedTimeHours,
-        createdDate = createdDate,
-        lastModifiedDate = lastModifiedDate,
-    )
-
     fun getAllTasks(userId: Long): List<TaskResponse>? {
         val findTasks: List<Task> = taskRepository.findAllByMemberId(userId)
-        return findTasks.map { task ->
-            TaskResponse(
-                id = task.id,
-                projectId = task.project?.id,
-                title = task.title,
-                description = task.description,
-                status = task.status,
-                tags = task.tags,
-                priority = task.priority,
-                dueDate = task.dueDate,
-                estimatedTimeHours = task.estimatedTimeHours,
-                createdDate = task.createdDate,
-                lastModifiedDate = task.lastModifiedDate,
-            )
-        }
+        return findTasks.map { task -> task.toResponse() }
     }
 }
