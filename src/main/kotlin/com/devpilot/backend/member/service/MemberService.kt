@@ -2,7 +2,6 @@ package com.devpilot.backend.member.service
 
 import com.devpilot.backend.common.authority.JwtTokenProvider
 import com.devpilot.backend.common.authority.TokenInfo
-import com.devpilot.backend.common.exception.InvalidInputException
 import com.devpilot.backend.common.exception.exceptions.DuplicateLoginIdException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.common.repository.MemberRefreshTokenRepository
@@ -16,13 +15,13 @@ import com.devpilot.backend.member.entity.MemberRole
 import com.devpilot.backend.member.repository.MemberRepository
 import com.devpilot.backend.member.repository.MemberRoleRepository
 import com.memo.memo.common.status.ROLE
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.transaction.Transactional
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.stereotype.Service
-import org.springframework.web.bind.annotation.RequestPart
-import org.springframework.web.multipart.MultipartFile
 
 @Transactional
 @Service
@@ -56,7 +55,10 @@ class MemberService(
      * 로그인 -> 토큰 발행
      */
     @Transactional
-    fun login(loginDto: LoginDto): TokenInfo {
+    fun login(
+        loginDto: LoginDto,
+        response: HttpServletResponse,
+        ): TokenInfo {
         val authenticationToken = UsernamePasswordAuthenticationToken(loginDto.loginId, loginDto.password)
         val authentication = authenticationManagerBuilder.`object`.authenticate(authenticationToken)
 
@@ -67,14 +69,18 @@ class MemberService(
         val refreshToken = jwtTokenProvider.createRefreshToken(authentication)
 
         val member = memberRepository.findByLoginId(loginDto.loginId)
+            ?: throw UserNotFoundException()
+        signService.saveRefreshToken(member, refreshToken)
 
-        // Refresh Token 저장
-        if (member != null) {
-            signService.saveRefreshToken(member, refreshToken)
-            return TokenInfo("Bearer", accessToken, refreshToken)
-        } else {
-            throw UserNotFoundException()
+        val cookie = Cookie("refreshToken", refreshToken).apply {
+            isHttpOnly = true
+            secure = true
+            path = "/"
+            maxAge = 60 * 60 * 24 * 7 // 7일
         }
+        response.addCookie(cookie)
+
+        return TokenInfo("Bearer", accessToken)
     }
 
     /**
@@ -105,7 +111,7 @@ class MemberService(
 
         return MemberDtoResponse(
             id = savedMember.id!!,
-            loginId = savedMember.loginId,
+            loginId = savedMember.loginId.toString(),
             name = savedMember.name,
             email = savedMember.email,
             role = savedMember.role,

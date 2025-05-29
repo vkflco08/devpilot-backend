@@ -2,13 +2,14 @@ package com.devpilot.backend.member.controller
 
 import com.devpilot.backend.common.authority.TokenInfo
 import com.devpilot.backend.common.dto.BaseResponse
-import com.devpilot.backend.common.dto.CustomUser
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.dto.LoginDto
 import com.devpilot.backend.member.dto.MemberDtoRequest
 import com.devpilot.backend.member.dto.MemberDtoResponse
 import com.devpilot.backend.member.dto.MemberProfileDtoRequest
 import com.devpilot.backend.member.service.MemberService
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -41,8 +42,9 @@ class MemberController(
     @PostMapping("/login")
     fun login(
         @RequestBody @Valid loginDto: LoginDto,
+        response: HttpServletResponse,
     ): BaseResponse<TokenInfo> {
-        val tokenInfo = memberService.login(loginDto)
+        val tokenInfo = memberService.login(loginDto, response)
         return BaseResponse.success(data = tokenInfo)
     }
 
@@ -52,7 +54,7 @@ class MemberController(
     @GetMapping("/info")
     fun searchMyInfo(): BaseResponse<MemberDtoResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
         val response = memberService.searchMyInfo(userId)
         return BaseResponse.success(data = response)
@@ -67,7 +69,7 @@ class MemberController(
     ): BaseResponse<MemberDtoResponse> {
         // 사용자 정보 처리
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val resultMsg = memberService.saveMyInfo(memberProfileDtoRequest, userId)
@@ -80,7 +82,7 @@ class MemberController(
     @DeleteMapping("/logout")
     fun logout(): BaseResponse<Unit> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val resultMsg: String = memberService.deleteRefToken(userId)
