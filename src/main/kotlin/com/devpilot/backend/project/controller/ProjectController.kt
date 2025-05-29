@@ -1,7 +1,7 @@
 package com.devpilot.backend.project.controller
 
 import com.devpilot.backend.common.dto.BaseResponse
-import com.devpilot.backend.common.dto.CustomUser
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
@@ -28,7 +28,7 @@ class ProjectController(
      */
     @PostMapping("/new")
     fun createProject(@RequestBody @Valid projectRequest: ProjectRequest): BaseResponse<ProjectResponse> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
 
         val response = projectService.createNewProject(projectRequest, userId)
@@ -40,7 +40,7 @@ class ProjectController(
      */
     @GetMapping("/all")
     fun getAll(): BaseResponse<List<ProjectResponse>> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = projectService.getAllTasks(userId)
         return BaseResponse.success(data = response)
@@ -52,7 +52,7 @@ class ProjectController(
     @GetMapping("/{projectId}")
     fun getOne(@PathVariable projectId: Long): BaseResponse<ProjectResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val response = projectService.getTask(userId, projectId)
@@ -68,7 +68,7 @@ class ProjectController(
         @RequestBody @Valid request: ProjectRequest
     ): BaseResponse<ProjectResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val response = projectService.updateProject(userId, id, request)
@@ -81,7 +81,7 @@ class ProjectController(
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): BaseResponse<Unit> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         projectService.deleteProject(userId, id)

@@ -47,6 +47,8 @@ dependencies {
 
     implementation("io.modelcontextprotocol:kotlin-sdk:0.3.0")
 	implementation("com.squareup.okio:okio:3.7.0")
+
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 }
 
 kotlin {

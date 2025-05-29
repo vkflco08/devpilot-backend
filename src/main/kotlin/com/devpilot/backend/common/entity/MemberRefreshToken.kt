@@ -2,6 +2,7 @@ package com.devpilot.backend.common.entity
 
 import BaseEntity
 import com.devpilot.backend.member.entity.Member
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
@@ -18,9 +19,11 @@ class MemberRefreshToken(
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "member_id")
-    val member: Member,
+    val member: Member?,
+
+    @Column(name = "refresh_token", columnDefinition = "TEXT")
     var refreshToken: String,
 ) : BaseEntity() {
     @Id
-    val memberId: Long? = null
+    var memberId: Long? = null
 }

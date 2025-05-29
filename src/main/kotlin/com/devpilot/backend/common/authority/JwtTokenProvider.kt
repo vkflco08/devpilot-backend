@@ -2,7 +2,7 @@
 
 package com.devpilot.backend.common.authority
 
-import com.devpilot.backend.common.dto.CustomUser
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import io.jsonwebtoken.*
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
@@ -44,7 +44,7 @@ class JwtTokenProvider {
             .builder()
             .setSubject(authentication.name)
             .claim("auth", authorities)
-            .claim("userId", (authentication.principal as CustomUser).userId)
+            .claim("userId", (authentication.principal as CustomSecurityUserDetails).userId)
             .setIssuedAt(now)
             .setExpiration(accessExpiration)
             .signWith(key, SignatureAlgorithm.HS256)
@@ -66,7 +66,7 @@ class JwtTokenProvider {
             .builder()
             .setSubject(authentication.name)
             .claim("auth", authorities)
-            .claim("userId", (authentication.principal as CustomUser).userId)
+            .claim("userId", (authentication.principal as CustomSecurityUserDetails).userId)
             .setIssuedAt(now)
             .setExpiration(refreshExpiration)
             .signWith(key, SignatureAlgorithm.HS256)
@@ -89,7 +89,7 @@ class JwtTokenProvider {
                 .split(",")
                 .map { SimpleGrantedAuthority(it) }
 
-        val principal: UserDetails = CustomUser(userId.toString().toLong(), claims.subject, "", authorities)
+        val principal: UserDetails = CustomSecurityUserDetails(userId.toString().toLong(), claims.subject, "", authorities)
 
         return UsernamePasswordAuthenticationToken(principal, "", authorities)
     }
@@ -129,5 +129,16 @@ class JwtTokenProvider {
     fun isTokenExpired(token: String): Boolean {
         val claims = getClaims(token)
         return claims.expiration.before(Date())
+    }
+
+    /**
+     * userId 가져오기
+     */
+    fun getUserIdFromToken(token: String): Long {
+        val claims = Jwts.parserBuilder().setSigningKey(key).build()
+            .parseClaimsJws(token)
+            .body
+
+        return claims["userId"].toString().toLong()
     }
 }

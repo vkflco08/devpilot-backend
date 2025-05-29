@@ -1,6 +1,7 @@
 package com.devpilot.backend.common.authority
 
 import com.devpilot.backend.common.ratelimit.RateLimitFilter
+import com.devpilot.backend.member.service.CustomOAuth2UserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -23,7 +24,10 @@ class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val rateLimitFilter: RateLimitFilter,
     @Value("\${cors.allowed.origins}") private val allowedOrigins: List<String>,
-    // List<String>으로 설정
+    private val customOAuth2UserService: CustomOAuth2UserService,
+    private val oAuth2SuccessHandler: OAuth2SuccessHandler,
+
+    private val oAuth2FailureHandler: OAuth2FailureHandler,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -31,6 +35,14 @@ class SecurityConfig(
             .httpBasic { it.disable() }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .oauth2Login { oauth2 ->
+                oauth2
+                    .userInfoEndpoint { userInfo ->
+                        userInfo.userService(customOAuth2UserService)
+                    }
+                    .successHandler(oAuth2SuccessHandler)
+                    .failureHandler(oAuth2FailureHandler)
+            }
             .authorizeHttpRequests {
                 it
                     .requestMatchers(
@@ -46,6 +58,7 @@ class SecurityConfig(
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
+                        "/oauth2/**",
                     ).permitAll()
             }.exceptionHandling { it.authenticationEntryPoint(customAuthenticationEntryPoint()) }
             .addFilterBefore(

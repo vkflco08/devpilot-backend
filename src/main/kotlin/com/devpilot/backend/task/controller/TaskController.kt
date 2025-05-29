@@ -1,7 +1,7 @@
 package com.devpilot.backend.task.controller
 
 import com.devpilot.backend.common.dto.BaseResponse
-import com.devpilot.backend.common.dto.CustomUser
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.task.dto.TaskCreateRequest
 import com.devpilot.backend.task.dto.TaskResponse
@@ -39,7 +39,7 @@ class TaskController(
         @RequestBody @Valid request: TaskCreateRequest
     ): BaseResponse<TaskResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val response = taskService.createTask(userId, request)
@@ -51,7 +51,7 @@ class TaskController(
      */
     @GetMapping("/all")
     fun getAll(): BaseResponse<List<TaskResponse>> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = taskService.getAllTasks(userId)
         return BaseResponse.success(data = response)
@@ -63,7 +63,7 @@ class TaskController(
     @GetMapping("/{id}")
     fun getOne(@PathVariable id: Long): BaseResponse<TaskResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val response = taskService.getTask(userId, id)
@@ -79,7 +79,7 @@ class TaskController(
         @RequestBody @Valid request: TaskUpdateRequest
     ): BaseResponse<TaskResponse> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         val response = taskService.updateTask(userId, id, request)
@@ -92,7 +92,7 @@ class TaskController(
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long): BaseResponse<Unit> {
         val userId =
-            (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+            (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
                 ?: throw UserNotFoundException()
 
         taskService.deleteTask(userId, id)
@@ -104,7 +104,7 @@ class TaskController(
         @PathVariable id: Long,
         @RequestBody request: TaskStatusUpdateRequest
     ): BaseResponse<TaskResponse> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = taskService.updateTaskStatus(userId, id, request.status)
         return BaseResponse.success(data = response)
@@ -115,7 +115,7 @@ class TaskController(
         @PathVariable id: Long,
         @RequestBody request: TaskTagUpdateRequest
     ): BaseResponse<TaskResponse> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = taskService.updateTaskTags(userId, id, request.tags)
         return BaseResponse.success(data = response)
@@ -126,7 +126,7 @@ class TaskController(
         @PathVariable id: Long,
         @RequestBody request: TaskScheduleUpdateRequest
     ): BaseResponse<TaskResponse> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = taskService.updateTaskSchedule(userId, id, request)
         return BaseResponse.success(data = response)
@@ -137,7 +137,7 @@ class TaskController(
         @PathVariable id: Long,
         @RequestBody request: TaskTimeUpdateRequest
     ): BaseResponse<TaskResponse> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomUser).userId
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = taskService.updateTaskTime(userId, id, request)
         return BaseResponse.success(data = response)

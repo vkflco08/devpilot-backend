@@ -4,6 +4,7 @@ import com.devpilot.backend.common.authority.TokenInfo
 import com.devpilot.backend.common.dto.BaseResponse
 import com.devpilot.backend.common.dto.TokenDtoRequest
 import com.devpilot.backend.common.service.SignService
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.web.bind.annotation.GetMapping
@@ -21,8 +22,9 @@ class AuthenticationController(
     @PostMapping("/refresh")
     fun refreshAccessToken(
         @RequestBody tokenRequestDto: TokenDtoRequest,
+        response: HttpServletResponse,
     ): BaseResponse<TokenInfo> {
-        val newAccessToken = signService.newAccessToken(tokenRequestDto)
+        val newAccessToken = signService.newAccessToken(tokenRequestDto, response)
         return BaseResponse.success(data = newAccessToken)
     }
 
