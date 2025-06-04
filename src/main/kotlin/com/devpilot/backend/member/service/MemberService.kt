@@ -72,7 +72,7 @@ class MemberService(
             ?: throw UserNotFoundException()
         signService.saveRefreshToken(member, refreshToken)
 
-        val cookie = Cookie("refreshToken", refreshToken).apply {
+        val cookie = Cookie("task-manager-refreshToken", refreshToken).apply {
             isHttpOnly = true
             secure = true
             path = "/"

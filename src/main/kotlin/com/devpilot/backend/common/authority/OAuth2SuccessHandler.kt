@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
@@ -69,7 +68,7 @@ class OAuth2SuccessHandler(
 
         signService.saveRefreshToken(user, refreshToken)
 
-        response.addCookie(Cookie("refreshToken", refreshToken).apply {
+        response.addCookie(Cookie("task-manager-refreshToken", refreshToken).apply {
             isHttpOnly = true
             secure = true
             path = "/"
@@ -80,7 +79,7 @@ class OAuth2SuccessHandler(
 
         val redirectUri = UriComponentsBuilder
             .fromUriString("${fronturl.first()}/oauth/callback")
-            .queryParam("accessToken", accessToken)
+            .queryParam("task-manager-accessToken", accessToken)
             .build()
             .toUriString()
 

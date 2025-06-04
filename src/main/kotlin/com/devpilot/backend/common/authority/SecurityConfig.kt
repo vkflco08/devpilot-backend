@@ -26,7 +26,6 @@ class SecurityConfig(
     @Value("\${cors.allowed.origins}") private val allowedOrigins: List<String>,
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
-
     private val oAuth2FailureHandler: OAuth2FailureHandler,
 ) {
     @Bean

@@ -74,4 +74,8 @@ class SignService(
 
         return TokenInfo("Bearer", newAccessToken)
     }
+
+    fun isAccessTokenExpired(token: String): Boolean {
+        return jwtTokenProvider.isTokenExpired(token)
+    }
 }
