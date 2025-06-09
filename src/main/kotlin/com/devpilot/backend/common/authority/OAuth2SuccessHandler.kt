@@ -3,6 +3,7 @@ package com.devpilot.backend.common.authority
 import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import com.devpilot.backend.common.service.SignService
 import com.devpilot.backend.member.entity.Member
+import com.devpilot.backend.member.entity.MemberAuthProvider
 import com.devpilot.backend.member.enum.AuthProvider
 import com.devpilot.backend.member.repository.MemberRepository
 import jakarta.servlet.http.Cookie
@@ -35,22 +36,42 @@ class OAuth2SuccessHandler(
         val name = oidcUser.fullName
         val providerId = oidcUser.name // 고유 사용자 ID
 
+        val user: Member
         // DB에서 사용자 조회
-        val user = memberRepository.findByEmail(email)
-            ?: memberRepository.save(
-                Member(
-                    loginId = email,
-                    password = null, // 소셜 로그인은 비번 없음
-                    name = name,
-                    email = email,
-                    role = "USER", // 기본 권한 부여
-                    phoneNumber = "N/A", // 소셜에서 제공되지 않음
-                    department = "N/A", // 필수면 기본값 설정
-                    description = "만나서 반갑습니다!",
-                    provider = AuthProvider.GOOGLE,
-                    providerId = providerId
-                )
-            ) // 없다면 저장
+        val existingUser = memberRepository.findByEmail(email)
+        if(existingUser != null) {
+            // 로컬로 가입한 기록이 있을 경우
+            val newProvider = MemberAuthProvider(
+                member = existingUser,
+                provider = AuthProvider.GOOGLE,
+                providerId = providerId
+            )
+            existingUser.addAuthProviderIfNotExists(newProvider)
+            memberRepository.save(existingUser)
+            user = existingUser
+        } else {
+            // 로컬로 가입한 기록 없음. 소셜 로그인으로 최초가입
+            val member = Member(
+                loginId = email,
+                password = null,
+                name = name,
+                email = email,
+                role = "USER",
+                phoneNumber = "N/A",
+                department = "N/A",
+                description = "만나서 반갑습니다!"
+            )
+
+            val newProvider = MemberAuthProvider(
+                member = member,
+                provider = AuthProvider.GOOGLE,
+                providerId = providerId
+            )
+
+            member.addAuthProviderIfNotExists(newProvider)
+            memberRepository.save(member)
+            user = member
+        }
 
         val customUserDetails = CustomSecurityUserDetails(
             userId = user.id,

@@ -11,7 +11,9 @@ import com.devpilot.backend.member.dto.MemberDtoRequest
 import com.devpilot.backend.member.dto.MemberDtoResponse
 import com.devpilot.backend.member.dto.MemberProfileDtoRequest
 import com.devpilot.backend.member.entity.Member
+import com.devpilot.backend.member.entity.MemberAuthProvider
 import com.devpilot.backend.member.entity.MemberRole
+import com.devpilot.backend.member.enum.AuthProvider
 import com.devpilot.backend.member.repository.MemberRepository
 import com.devpilot.backend.member.repository.MemberRoleRepository
 import com.memo.memo.common.status.ROLE
@@ -43,6 +45,14 @@ class MemberService(
             throw DuplicateLoginIdException()
         }
         member = memberDtoRequest.toEntity()
+
+        val newProvider = MemberAuthProvider(
+            member = member,
+            provider = AuthProvider.LOCAL,
+            providerId = null
+        )
+
+        member.addAuthProviderIfNotExists(newProvider)
         memberRepository.save(member)
 
         val memberRole = MemberRole(null, ROLE.MEMBER, member)
@@ -119,6 +129,7 @@ class MemberService(
             description = savedMember.description,
             department = savedMember.department,
             phoneNumber = savedMember.phoneNumber,
+            providers = savedMember.authProviders.map { it.provider }
         )
     }
 
