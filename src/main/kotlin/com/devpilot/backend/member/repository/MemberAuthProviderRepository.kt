@@ -11,4 +11,6 @@ interface MemberAuthProviderRepository : JpaRepository<MemberAuthProvider, Long>
         WHERE m.member.email = :email AND m.provider = :provider
     """)
     fun findByEmailAndProvider(email: String, provider: AuthProvider): MemberAuthProvider?
+
+    fun findByProviderId(providerId: String): List<MemberAuthProvider>
 }

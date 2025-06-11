@@ -9,11 +9,13 @@ import com.devpilot.backend.member.repository.MemberRepository
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser
+import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler
 import org.springframework.stereotype.Component
 import org.springframework.web.util.UriComponentsBuilder
@@ -26,15 +28,33 @@ class OAuth2SuccessHandler(
     @Value("\${cors.allowed.origins}") private val fronturl: List<String>
 ) : AuthenticationSuccessHandler {
 
+    @Transactional
     override fun onAuthenticationSuccess(
         request: HttpServletRequest,
         response: HttpServletResponse,
         authentication: Authentication
     ) {
-        val oidcUser = authentication.principal as DefaultOidcUser
-        val email = oidcUser.email
-        val name = oidcUser.fullName
-        val providerId = oidcUser.name // 고유 사용자 ID
+        val principal = authentication.principal
+
+        val email: String
+        val name: String
+        val providerId: String
+
+        when (principal) {
+            is DefaultOidcUser -> {
+                email = principal.email
+                name = principal.fullName
+                providerId = principal.name
+            }
+            is OAuth2User -> {
+                email = principal.attributes["email"] as? String ?: throw IllegalArgumentException("Email not found")
+                name = principal.attributes["name"] as? String ?: "이름없음"
+                providerId = principal.name
+            }
+            else -> {
+                throw IllegalStateException("Unsupported principal type: ${principal::class}")
+            }
+        }
 
         val user: Member
         // DB에서 사용자 조회

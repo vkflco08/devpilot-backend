@@ -1,6 +1,5 @@
 package com.devpilot.backend.member.service
 
-import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.dto.MemberPrincipal
 import com.devpilot.backend.member.entity.Member
 import com.devpilot.backend.member.entity.MemberAuthProvider
@@ -11,53 +10,58 @@ import com.devpilot.backend.member.repository.MemberAuthProviderRepository
 import com.devpilot.backend.member.repository.MemberRepository
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
-import org.springframework.security.oauth2.core.user.OAuth2User
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
 import org.springframework.stereotype.Service
 
 @Service
 @Transactional
-class CustomOAuth2UserService(
+class CustomOidcUserService(
     private val memberRepository: MemberRepository,
     private val memberAuthProviderRepository: MemberAuthProviderRepository
-) : OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+) : OAuth2UserService<OidcUserRequest, OidcUser> {
 
-    private val logger = LoggerFactory.getLogger(CustomOAuth2UserService::class.java)
+    private val logger = LoggerFactory.getLogger(CustomOidcUserService::class.java)
 
-    override fun loadUser(userRequest: OAuth2UserRequest): OAuth2User {
-        val delegate = DefaultOAuth2UserService()
-        val oauth2User = delegate.loadUser(userRequest)
+    override fun loadUser(userRequest: OidcUserRequest): OidcUser {
+        println("✅ CustomOidcUserService loadUser 호출됨")
+        val delegate = OidcUserService()
+        val oidcUser = delegate.loadUser(userRequest)
 
         val registrationId = userRequest.clientRegistration.registrationId
-
-        // OAuth2 사용자 정보 파싱
-        val oauth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, oauth2User.attributes)
+        val oauth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(registrationId, oidcUser.attributes)
 
         val oauthEmail = oauth2UserInfo.email
         if (oauthEmail.isNullOrEmpty()) {
             throw OAuth2AuthenticationException("OAuth2 provider에서 이메일을 찾을 수 없습니다.")
         }
 
-        val member = memberAuthProviderRepository.findByEmailAndProvider(
-            email = oauthEmail,
-            getAuthProvider(registrationId)
-        ) ?. member ?: throw UserNotFoundException()
+        val provider = getAuthProvider(registrationId)
 
-        return MemberPrincipal.create(member, oauth2User.attributes)
+        // ✅ 일반 소셜 로그인 흐름
+        val existingAuthProvider = memberAuthProviderRepository.findByEmailAndProvider(
+            email = oauthEmail,
+            provider = provider
+        )
+
+        val member = existingAuthProvider?.member ?: registerNewMember(userRequest, oauth2UserInfo)
+
+        logger.info("[소셜 계정 로그인] 사용자: ${member.email}, Provider: $provider")
+        return MemberPrincipal.create(member, oidcUser.attributes, oidcUser.idToken, oidcUser.userInfo)
     }
 
-    private fun registerNewMember(oAuth2UserRequest: OAuth2UserRequest, oAuth2UserInfo: OAuth2UserInfo): Member {
-        val provider = getAuthProvider(oAuth2UserRequest.clientRegistration.registrationId)
+    private fun registerNewMember(userRequest: OidcUserRequest, oAuth2UserInfo: OAuth2UserInfo): Member {
+        val provider = getAuthProvider(userRequest.clientRegistration.registrationId)
 
         val member = Member.createSocialMember(
             email = oAuth2UserInfo.email!!,
             name = oAuth2UserInfo.name ?: "사용자",
             providerId = oAuth2UserInfo.id,
-            department = "일반", // 기본값 설정
-            phoneNumber = "", // 소셜 로그인에서는 전화번호를 받지 않으므로 기본값
+            department = "일반",
+            phoneNumber = "",
             description = "소셜 로그인 사용자"
         )
 
@@ -68,17 +72,8 @@ class CustomOAuth2UserService(
         )
         member.addAuthProviderIfNotExists(memberAuthProvider)
 
-        logger.info("새로운 소셜 로그인 사용자 등록: ${member.email}, Provider: ${provider}")
+        logger.info("새로운 소셜 로그인 사용자 등록: ${member.email}, Provider: $provider")
         return memberRepository.save(member)
-    }
-
-    private fun updateExistingMember(existingMember: Member, oAuth2UserInfo: OAuth2UserInfo): Member {
-        // 소셜 로그인 사용자 정보 업데이트
-        existingMember.name = oAuth2UserInfo.name ?: existingMember.name
-//        existingMember.profileImage = oAuth2UserInfo.imageUrl ?: existingMember.profileImage
-
-        logger.info("기존 소셜 로그인 사용자 정보 업데이트: ${existingMember.email}")
-        return memberRepository.save(existingMember)
     }
 
     private fun getAuthProvider(registrationId: String): AuthProvider {

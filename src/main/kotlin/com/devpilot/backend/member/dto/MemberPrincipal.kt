@@ -2,30 +2,47 @@ package com.devpilot.backend.member.dto
 
 import com.devpilot.backend.member.entity.Member
 import org.springframework.security.core.GrantedAuthority
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.security.oauth2.core.user.OAuth2User
+import org.springframework.security.oauth2.core.oidc.OidcIdToken
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo
+import org.springframework.security.oauth2.core.oidc.user.OidcUser
 
-data class MemberPrincipal(
-    val member: Member,
-    private val attributes: Map<String, Any>? = null
-) : OAuth2User, UserDetails {
+class MemberPrincipal(
+    private val member: Member,
+    private val authorities: Collection<GrantedAuthority> = listOf(),
+    private val attributes: Map<String, Any> = mapOf(),
+    private val idToken: OidcIdToken? = null,
+    private val userInfo: OidcUserInfo? = null
+) : OidcUser {
 
-    override fun getAuthorities(): Collection<GrantedAuthority> =
-        listOf(SimpleGrantedAuthority("ROLE_${member.role}"))
+    override fun getName(): String = member.id.toString()
 
-    override fun getPassword(): String? = member.password
-    override fun getUsername(): String = member.email
-    override fun isAccountNonExpired() = true
-    override fun isAccountNonLocked() = true
-    override fun isCredentialsNonExpired() = true
-    override fun isEnabled() = true
-    override fun getAttributes(): Map<String, Any>? = attributes
-    override fun getName(): String = member.name
+    override fun getAttributes(): Map<String, Any> = attributes
+
+    override fun getAuthorities(): Collection<GrantedAuthority> = authorities
+
+    override fun getClaims(): Map<String, Any> = attributes // 보통 claims = attributes 로 처리 가능
+
+    override fun getIdToken(): OidcIdToken = idToken
+        ?: throw IllegalStateException("ID Token is required for OIDC user")
+
+    override fun getUserInfo(): OidcUserInfo? = userInfo
+
+    fun getMember(): Member = member
 
     companion object {
-        fun create(member: Member, attributes: Map<String, Any>? = null): MemberPrincipal {
-            return MemberPrincipal(member, attributes)
+        fun create(
+            member: Member,
+            attributes: Map<String, Any>,
+            idToken: OidcIdToken,
+            userInfo: OidcUserInfo?,
+        ): MemberPrincipal {
+            return MemberPrincipal(
+                member = member,
+                authorities = listOf(), // 필요하면 ROLE_ 추가
+                attributes = attributes,
+                idToken = idToken,
+                userInfo = userInfo
+            )
         }
     }
 }

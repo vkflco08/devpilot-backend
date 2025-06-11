@@ -1,7 +1,8 @@
 package com.devpilot.backend.common.authority
 
 import com.devpilot.backend.common.ratelimit.RateLimitFilter
-import com.devpilot.backend.member.service.CustomOAuth2UserService
+//import com.devpilot.backend.member.service.CustomOAuth2UserService
+import com.devpilot.backend.member.service.CustomOidcUserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -24,12 +25,14 @@ class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val rateLimitFilter: RateLimitFilter,
     @Value("\${cors.allowed.origins}") private val allowedOrigins: List<String>,
-    private val customOAuth2UserService: CustomOAuth2UserService,
+//    private val customOAuth2UserService: CustomOAuth2UserService,
+    private val customOidcUserService: CustomOidcUserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
+        println("filterChain called - security 설정 적용 중")
         http
             .httpBasic { it.disable() }
             .csrf { it.disable() }
@@ -37,7 +40,7 @@ class SecurityConfig(
             .oauth2Login { oauth2 ->
                 oauth2
                     .userInfoEndpoint { userInfo ->
-                        userInfo.userService(customOAuth2UserService)
+                        userInfo.oidcUserService(customOidcUserService)
                     }
                     .successHandler(oAuth2SuccessHandler)
                     .failureHandler(oAuth2FailureHandler)
