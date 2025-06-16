@@ -4,7 +4,7 @@ import com.devpilot.backend.common.exception.exceptions.InvalidBindingRequestExc
 import com.devpilot.backend.common.exception.exceptions.SocialAccountAlreadyLinkedException
 import com.devpilot.backend.common.exception.exceptions.UnsupportedSocialProviderException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
-import com.devpilot.backend.common.repository.CustomAuthorizationRequestRepository.Companion.SPRING_SECURITY_OAUTH2_BINDING_DATA
+import com.devpilot.backend.common.repository.CustomAuthorizationRequestRepository.Companion.IS_BINDING_REQUEST_FLAG
 import com.devpilot.backend.member.dto.MemberPrincipal
 import com.devpilot.backend.member.entity.Member
 import com.devpilot.backend.member.entity.MemberAuthProvider
@@ -13,6 +13,7 @@ import com.devpilot.backend.member.oauth.OAuth2UserInfo
 import com.devpilot.backend.member.oauth.OAuth2UserInfoFactory
 import com.devpilot.backend.member.repository.MemberAuthProviderRepository
 import com.devpilot.backend.member.repository.MemberRepository
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.transaction.Transactional
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
@@ -60,34 +61,36 @@ class CustomOidcUserService(
         val BIND_STATE_PREFIX = "bind:" // 연동 요청을 식별하는 접두사
 
         var isBindingRequest = false
-        var bindingData: Map<String, Any>? = null // 이 변수에 `bind:UUID` 문자열이 저장될 것
+        var extractedBindingState: String? = null
 
         if (returnedSpringSecurityState != null) {
             // Spring Security의 원래 state를 키로 사용하여 세션에 저장된 Map 형태의 바인딩 데이터를 가져옵니다.
-            bindingData = request.session.getAttribute(
-                SPRING_SECURITY_OAUTH2_BINDING_DATA + "_" + returnedSpringSecurityState
-            ) as? Map<String, Any>
+            val bindingFlagKey = IS_BINDING_REQUEST_FLAG + "_" + returnedSpringSecurityState
+            val bindingFlag = request.session.getAttribute(bindingFlagKey) as? Boolean
 
-            // 바인딩 데이터가 존재하면 연동 요청으로 판단
-            if (bindingData != null) {
-                val bindStateFromMap = bindingData["bindState"] as? String
-                if (bindStateFromMap != null && bindStateFromMap.startsWith(BIND_STATE_PREFIX)) {
-                    isBindingRequest = true
-                }
-                // 세션에서 사용한 바인딩 데이터 제거
-                request.session.removeAttribute(
-                    SPRING_SECURITY_OAUTH2_BINDING_DATA + "_" + returnedSpringSecurityState
-                )
-                println("DEBUG: Removed binding data from session in CustomOidcUserService.")
+            if (bindingFlag == true) {
+                isBindingRequest = true
+
+                val sessionAttributeNames = request.session.attributeNames.toList()
+                extractedBindingState = sessionAttributeNames.firstOrNull { it.startsWith(BIND_STATE_PREFIX) }
+
+                // 사용한 플래그 제거
+                request.session.removeAttribute(bindingFlagKey)
+                println("DEBUG: Removed binding flag from session in CustomOidcUserService.")
             }
         }
 
-        println("추출된 연동용 데이터: ${bindingData}")
+        println("추출된 연동용 state (bind:UUID) from session: ${extractedBindingState}")
         println("연동 요청 여부: ${isBindingRequest}")
 
-        return if (isBindingRequest && bindingData != null) {
-            // 이제 extractedBindingState는 "bind:UUID" 값을 가집니다.
-            bindSocialAccount(bindingData, oauth2UserInfo, provider, oidcUser)
+        val finalBindingData: Map<String, Any>? = if (extractedBindingState != null) {
+            mapOf("bindState" to extractedBindingState)
+        } else {
+            null
+        }
+
+        return if (isBindingRequest && finalBindingData != null) {
+            bindSocialAccount(finalBindingData, oauth2UserInfo, provider, oidcUser, request)
         } else {
             loginOrRegister(oauth2UserInfo, provider, userRequest, oidcUser)
         }
@@ -97,19 +100,27 @@ class CustomOidcUserService(
         bindingData: Map<String, Any>,
         userInfo: OAuth2UserInfo,
         provider: AuthProvider,
-        oidcUser: OidcUser
+        oidcUser: OidcUser,
+        request: HttpServletRequest
+
     ): OidcUser {
         val bindState = bindingData["bindState"] as? String // 바인딩을 위한 고유 state (예: "bind:UUID")
-        val userId = bindingData["userId"] as? Long
 
-        if (userId == null || bindState == null) {
+        if (bindState == null) {
             throw OAuth2AuthenticationException(
                 OAuth2Error(InvalidBindingRequestException().resultCode, InvalidBindingRequestException().message, null),
                 InvalidBindingRequestException()
             )
         }
 
-        println("DEBUG: bindSocialAccount에서 세션으로부터 가져온 userId: $userId")
+        val userId = request.session.getAttribute(bindState) as? Long
+            ?: throw OAuth2AuthenticationException(
+                OAuth2Error(InvalidBindingRequestException().resultCode, InvalidBindingRequestException().message, null),
+                InvalidBindingRequestException()
+            )
+
+        request.session.removeAttribute(bindState)
+        println("DEBUG: bindSocialAccount에서 세션으로부터 가져온 userId: $userId (bindState: $bindState)")
 
         // 사용자를 찾을 수 없을 때
         val userNotFoundEx = UserNotFoundException()
