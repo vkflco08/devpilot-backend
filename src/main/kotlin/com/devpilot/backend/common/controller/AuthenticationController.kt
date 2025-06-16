@@ -73,7 +73,7 @@ class AuthenticationController(
 
         val redirectUri = UriComponentsBuilder
             .fromUriString("$beBaseUrl/oauth2/authorization/google")
-            .queryParam("state", stateToken)
+            .queryParam("my_custom_bind_state", stateToken)
             .build().toUriString()
 
         return BaseResponse.success(data = redirectUri)
