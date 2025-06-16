@@ -10,7 +10,7 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
     companion object {
         const val SESSION_ATTR_NAME = "SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST"
         // 연동 관련 state 정보를 저장할 새로운 세션 속성 이름
-        const val SPRING_SECURITY_OAUTH2_BINDING_DATA = "SPRING_SECURITY_OAUTH2_BINDING_DATA"
+        const val IS_BINDING_REQUEST_FLAG = "IS_BINDING_REQUEST_FLAG"
     }
 
     override fun loadAuthorizationRequest(request: HttpServletRequest): OAuth2AuthorizationRequest? {
@@ -46,39 +46,23 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
         val customParamState = request.getParameter("my_custom_bind_state")
 
         println("DEBUG: Original SS State = $originalSpringSecurityState")
-        println("DEBUG: Custom Param State = $customParamState")
+        println("DEBUG: my_custom_bind_state Parameter = $customParamState")
 
-        // 1. 스프링 시큐리티의 OAuth2AuthorizationRequest 객체는 원래 state 그대로 세션에 저장
+        // 1. Spring Security의 OAuth2AuthorizationRequest 객체는 원래 state 그대로 세션에 저장
         session.setAttribute(SESSION_ATTR_NAME, authorizationRequest)
         println("DEBUG: After setting ${SESSION_ATTR_NAME}, attributes: ${session.attributeNames.toList().joinToString(", ")}")
 
-        // 2. 만약 customParamState가 "bind:"로 시작한다면, 이 정보를 별도 세션에 저장
-        //    이때, 키는 originalSpringSecurityState를 사용합니다.
+        // 2. 만약 myCustomBindState가 "bind:"로 시작한다면, 연동 요청 플래그를 세션에 저장
+        //    이때, 키는 originalSpringSecurityState와 조합합니다.
         if (customParamState != null && customParamState.startsWith("bind:")) {
-            val bindingDataKey = SPRING_SECURITY_OAUTH2_BINDING_DATA + "_" + originalSpringSecurityState
-
-            // 컨트롤러에서 임시로 저장했던 userId를 가져와 Map에 포함시킵니다.
-            val userId = session.getAttribute("temp_binding_user_id") as? Long
-            if (userId != null) {
-                session.removeAttribute("temp_binding_user_id") // 사용했으니 임시 userId 제거
-            }
-
-            val bindingMap = mutableMapOf<String, Any>()
-            bindingMap["bindState"] = customParamState // "bind:UUID" 값
-            if (userId != null) {
-                bindingMap["userId"] = userId // 현재 로그인된 사용자의 ID
-            } else {
-                println("WARN: userId not found in session for binding request.")
-            }
-
-            session.setAttribute(bindingDataKey, bindingMap)
-
-            println("📦 클라이언트 전달 state 파라미터 (bind): $customParamState")
-            println("✅ 세션에 연동 요청 플래그 설정")
+            val bindingFlagKey = IS_BINDING_REQUEST_FLAG + "_" + originalSpringSecurityState
+            session.setAttribute(bindingFlagKey, true) // 연동 요청임을 나타내는 플래그만 저장
+            println("� 클라이언트 전달 my_custom_bind_state (bind): $customParamState")
+            println("✅ 세션에 연동 요청 플래그 설정 (key: $bindingFlagKey)")
             println("Session attributes after save (detailed): ${session.attributeNames.toList().joinToString(", ")}")
         } else {
-            println("📦 클라이언트 전달 state 파라미터 (일반): $customParamState")
-            println("Session attributes after save (no binding state): ${session.attributeNames.toList().joinToString(", ")}")
+            println("📦 클라이언트 전달 my_custom_bind_state (일반): $customParamState")
+            println("Session attributes after save (no binding flag): ${session.attributeNames.toList().joinToString(", ")}")
         }
 
         println("🚀 IdP로 리다이렉트될 때 사용될 state는 '${originalSpringSecurityState}'입니다. (이 값이 Google로 보내집니다)")
@@ -96,13 +80,6 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
 
         // 세션에서 OAuth2AuthorizationRequest 제거 (Spring Security가 요구하는 부분)
         session.removeAttribute(SESSION_ATTR_NAME)
-
-        // 연동 데이터도 함께 제거 (originalSpringSecurityState를 여기서 알 수 있음)
-        authorizationRequest?.state?.let { originalSsState ->
-            val bindingDataKey = SPRING_SECURITY_OAUTH2_BINDING_DATA + "_" + originalSsState
-            session.removeAttribute(bindingDataKey)
-            println("DEBUG: Removed binding data with key: $bindingDataKey")
-        }
 
         println("DEBUG: removeAuthorizationRequest - Session attributes after removal: ${session.attributeNames.toList().joinToString(", ")}")
 

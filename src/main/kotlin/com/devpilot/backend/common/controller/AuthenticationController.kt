@@ -65,7 +65,7 @@ class AuthenticationController(
         println("🔗 계정 연동 요청: userId = $userId, provider = google")
 
         // state를 위한 랜덤 값 생성
-        val stateToken = "bind:" + UUID.randomUUID().toString()
+        val stateToken = "bind:${UUID.randomUUID()}"
 
         // 세션에 userId <-> state 매핑 저장 (예: request.session.setAttribute("bind:<UUID>", userId))
         request.session.setAttribute(stateToken, userId)
