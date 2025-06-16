@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
+import org.springframework.beans.factory.annotation.Value
 import java.util.*
 import java.util.stream.Collectors
 
@@ -25,7 +26,11 @@ import java.util.stream.Collectors
 @RequestMapping("/api/auth")
 class AuthenticationController(
     private val signService: SignService,
+    @Value("\${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private val googleRedirectUri: String
 ) {
+
+
     @PostMapping("/refresh")
     fun refreshAccessToken(
         @RequestBody tokenRequestDto: TokenDtoRequest,
@@ -69,7 +74,7 @@ class AuthenticationController(
         println("🧩 저장된 state = $stateToken → userId = $userId")
 
         val redirectUri = UriComponentsBuilder
-            .fromUriString("http://localhost:8090/oauth2/authorization/google")
+            .fromUriString(googleRedirectUri)
             .queryParam("state", stateToken)
             .build().toUriString()
 
