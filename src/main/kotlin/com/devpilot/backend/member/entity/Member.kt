@@ -2,7 +2,6 @@ package com.devpilot.backend.member.entity
 
 import BaseEntity
 import com.devpilot.backend.member.dto.MemberDtoResponse
-import com.devpilot.backend.member.enum.AuthProvider
 import com.memo.memo.common.status.ROLE
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -25,7 +24,6 @@ import lombok.Getter
 @Getter
 @Table(
     uniqueConstraints = [
-        UniqueConstraint(name = "uk_member_login_id", columnNames = ["loginId"]),
         UniqueConstraint(name = "uk_member_email_provider", columnNames = ["email", "provider"])
     ],
 )
@@ -55,10 +53,6 @@ class Member(
     // 소셜 로그인 관련 필드 추가
     @OneToMany(mappedBy = "member", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
     val authProviders: MutableList<MemberAuthProvider> = mutableListOf(),
-
-    // 소셜 로그인 제공자의 사용자 ID
-    @Column(nullable = true, length = 100)
-    var providerId: String? = null,
 ) : BaseEntity() {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "member")
     val memberRole: List<MemberRole>? = null
@@ -81,7 +75,6 @@ class Member(
         fun createSocialMember(
             email: String,
             name: String,
-            providerId: String,
             department: String = "일반",
             phoneNumber: String = "",
             description: String = "소셜 로그인 사용자"
@@ -95,7 +88,6 @@ class Member(
                 phoneNumber = phoneNumber,
                 department = department,
                 description = description,
-                providerId = providerId
             )
         }
     }

@@ -2,7 +2,6 @@ package com.devpilot.backend.member.entity
 
 import BaseEntity
 import com.devpilot.backend.member.enum.AuthProvider
-import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated

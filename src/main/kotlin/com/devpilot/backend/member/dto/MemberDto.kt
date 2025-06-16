@@ -95,8 +95,6 @@ data class MemberProfileDtoRequest(
     @field:NotBlank(message = "이름은 필수 항목입니다.")
     @JsonProperty("name")
     var name: String,
-//    var profileImage: String? = null,
-    // 프로필 이미지 URL (선택)
     @field:NotBlank
     @JsonProperty("role")
     var role: String,
@@ -117,7 +115,6 @@ data class MemberProfileDtoRequest(
     fun toEntity(existingMember: Member): Member =
         existingMember.apply {
             this.name = this@MemberProfileDtoRequest.name
-//            this.profileImage = this@MemberProfileDtoRequest.profileImage
             this.role = this@MemberProfileDtoRequest.role
             this.phoneNumber = this@MemberProfileDtoRequest.phoneNumber
             this.department = this@MemberProfileDtoRequest.department

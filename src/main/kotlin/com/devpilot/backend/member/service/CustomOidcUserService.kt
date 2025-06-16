@@ -96,14 +96,9 @@ class CustomOidcUserService(
         val member = memberRepository.findByIdOrNull(userId)
             ?: throw OAuth2AuthenticationException(OAuth2Error(userNotFoundEx.resultCode, userNotFoundEx.message, null), userNotFoundEx)
 
-        // Member 객체는 찾았으나, ID가 유효하지 않은 경우 (데이터 무결성 문제 등)
-        val invalidMemberStateEx = UserNotFoundException()
-        val memberId = member.id
-            ?: throw OAuth2AuthenticationException(OAuth2Error(invalidMemberStateEx.resultCode, invalidMemberStateEx.message, null), invalidMemberStateEx)
-
-        // 이미 다른 계정에 연동된 소셜 계정일 때
+        // 이미 가입한 소셜 계정일때
         val alreadyLinkedEx = SocialAccountAlreadyLinkedException()
-        val existingProvider = memberAuthProviderRepository.findByMemberIdAndProvider(memberId, provider)
+        val existingProvider = memberAuthProviderRepository.findByProviderAndProviderId(provider, userInfo.id)
         if (existingProvider != null) {
             throw OAuth2AuthenticationException(OAuth2Error(alreadyLinkedEx.resultCode, alreadyLinkedEx.message, null), alreadyLinkedEx)
         }
@@ -141,7 +136,6 @@ class CustomOidcUserService(
         val member = Member.createSocialMember(
             email = oAuth2UserInfo.email!!,
             name = oAuth2UserInfo.name ?: "사용자",
-            providerId = oAuth2UserInfo.id,
             department = "일반",
             phoneNumber = "",
             description = "소셜 로그인 사용자"

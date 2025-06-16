@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.util.UriComponentsBuilder
 import java.io.IOException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Component
 class OAuth2FailureHandler(
@@ -47,7 +49,7 @@ class OAuth2FailureHandler(
                         logger.warn("OAuth2 연동 실패 (사용자 없음): {}", exception.message)
                     }
                     "이미 다른 계정에 연동된 소셜 계정입니다." -> {
-                        errorMessage = "이미 다른 계정에 연동된 소셜 계정입니다. 해당 계정으로 로그인해주세요."
+                        errorMessage = "이미 다른 계정에 연동된 소셜 계정입니다."
                         logger.warn("OAuth2 연동 실패 (중복 연동): {}", exception.message)
                     }
                     else -> if (exception.message?.startsWith("지원하지 않는 소셜 로그인") == true) {
@@ -64,13 +66,13 @@ class OAuth2FailureHandler(
             logger.error("소셜 로그인 실패 (일반 Authentication 에러): {}", exception.message, exception)
         }
 
-        response.status = httpStatus
-        response.contentType = "application/json;charset=UTF-8"
-
-        response.writer.write("{\"error\": \"$errorMessage\"}")
+        // 오류 메시지를 URL 인코딩하여 리다이렉트 URL에 포함
+        val encodedErrorMessage = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8.toString())
 
         val redirectUri = UriComponentsBuilder
             .fromUriString("${fronturl.first()}/mypage")
+            .queryParam("error", encodedErrorMessage)
+            .queryParam("status", httpStatus)
             .build()
             .toUriString()
 
