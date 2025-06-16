@@ -10,7 +10,7 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
     companion object {
         const val SESSION_ATTR_NAME = "SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST"
         // 연동 관련 state 정보를 저장할 새로운 세션 속성 이름
-        const val IS_BINDING_REQUEST_FLAG = "IS_BINDING_REQUEST_FLAG"
+        const val SPRING_SECURITY_OAUTH2_BINDING_DATA = "SPRING_SECURITY_OAUTH2_BINDING_DATA"
     }
 
     override fun loadAuthorizationRequest(request: HttpServletRequest): OAuth2AuthorizationRequest? {
@@ -35,18 +35,19 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
 
         if (authorizationRequest == null) {
             session.removeAttribute(SESSION_ATTR_NAME)
-            // Note: BINDING_STATE는 CustomOidcUserService에서 제거하므로 여기서는 제거하지 않습니다.
+            session.removeAttribute(SPRING_SECURITY_OAUTH2_BINDING_DATA)
             println("Session attributes after null request cleanup: ${session.attributeNames.toList().joinToString(", ")}")
             return
         }
 
         // Spring Security가 생성한 기본 state (CSRF 방어용)
         val originalSpringSecurityState = authorizationRequest.state
-        // 클라이언트로부터 전달된 "bind:" 정보가 담긴 state 파라미터
-        val customParamState = request.getParameter("my_custom_bind_state")
+        val bindingUserIdStr = request.getParameter("binding_user_id")
+        val bindingStateToken = request.getParameter("binding_state_token")
 
         println("DEBUG: Original SS State = $originalSpringSecurityState")
-        println("DEBUG: my_custom_bind_state Parameter = $customParamState")
+        println("DEBUG: binding_user_id Parameter = $bindingUserIdStr")
+        println("DEBUG: binding_state_token Parameter = $bindingStateToken")
 
         // 1. Spring Security의 OAuth2AuthorizationRequest 객체는 원래 state 그대로 세션에 저장
         session.setAttribute(SESSION_ATTR_NAME, authorizationRequest)
@@ -54,15 +55,25 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
 
         // 2. 만약 myCustomBindState가 "bind:"로 시작한다면, 연동 요청 플래그를 세션에 저장
         //    이때, 키는 originalSpringSecurityState와 조합합니다.
-        if (customParamState != null && customParamState.startsWith("bind:")) {
-            val bindingFlagKey = IS_BINDING_REQUEST_FLAG + "_" + originalSpringSecurityState
-            session.setAttribute(bindingFlagKey, true) // 연동 요청임을 나타내는 플래그만 저장
-            println("� 클라이언트 전달 my_custom_bind_state (bind): $customParamState")
-            println("✅ 세션에 연동 요청 플래그 설정 (key: $bindingFlagKey)")
+        if (bindingUserIdStr != null && bindingStateToken != null && bindingStateToken.startsWith("bind:")) {
+            val bindingDataKey = SPRING_SECURITY_OAUTH2_BINDING_DATA + "_" + originalSpringSecurityState
+
+            val userId = bindingUserIdStr.toLongOrNull() // userId 문자열을 Long으로 변환
+
+            val bindingMap = mutableMapOf<String, Any>()
+            bindingMap["bindState"] = bindingStateToken // "bind:UUID" 값
+            if (userId != null) {
+                bindingMap["userId"] = userId // 현재 로그인된 사용자의 ID
+            } else {
+                println("WARN: userId not found in parameter 'binding_user_id' or could not be parsed to Long: $bindingUserIdStr")
+            }
+
+            session.setAttribute(bindingDataKey, bindingMap)
+            println("📦 세션에 연동 데이터 저장 (key: $bindingDataKey, value: $bindingMap)")
             println("Session attributes after save (detailed): ${session.attributeNames.toList().joinToString(", ")}")
         } else {
-            println("📦 클라이언트 전달 my_custom_bind_state (일반): $customParamState")
-            println("Session attributes after save (no binding flag): ${session.attributeNames.toList().joinToString(", ")}")
+            println("📦 커스텀 연동 파라미터가 없거나 유효하지 않습니다. (bindingUserIdStr: $bindingUserIdStr, bindingStateToken: $bindingStateToken)")
+            println("Session attributes after save (no binding data stored): ${session.attributeNames.toList().joinToString(", ")}")
         }
 
         println("🚀 IdP로 리다이렉트될 때 사용될 state는 '${originalSpringSecurityState}'입니다. (이 값이 Google로 보내집니다)")
