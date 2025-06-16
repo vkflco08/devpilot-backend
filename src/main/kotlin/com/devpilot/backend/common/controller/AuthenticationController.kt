@@ -26,11 +26,9 @@ import java.util.stream.Collectors
 @RequestMapping("/api/auth")
 class AuthenticationController(
     private val signService: SignService,
-    @Value("\${spring.security.oauth2.client.registration.google.redirect-uri}")
-    private val googleRedirectUri: String
+    @Value("\${app.be-base-url}")
+    private val beBaseUrl: String
 ) {
-
-
     @PostMapping("/refresh")
     fun refreshAccessToken(
         @RequestBody tokenRequestDto: TokenDtoRequest,
@@ -74,7 +72,7 @@ class AuthenticationController(
         println("🧩 저장된 state = $stateToken → userId = $userId")
 
         val redirectUri = UriComponentsBuilder
-            .fromUriString(googleRedirectUri)
+            .fromUriString("$beBaseUrl/oauth2/authorization/google")
             .queryParam("state", stateToken)
             .build().toUriString()
 
