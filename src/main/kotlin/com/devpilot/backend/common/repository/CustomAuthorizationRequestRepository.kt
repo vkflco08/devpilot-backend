@@ -55,11 +55,8 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
         // 2. 만약 customParamState가 "bind:"로 시작한다면, 이 정보를 별도 세션에 저장
         //    이때, 키는 originalSpringSecurityState를 사용합니다.
         if (customParamState != null && customParamState.startsWith("bind:")) {
-            val bindingKey = SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE + "_" + originalSpringSecurityState
-            session.setAttribute(bindingKey, customParamState)
             println("📦 클라이언트 전달 state 파라미터 (bind): $customParamState")
-            println("✅ 세션에 저장된 연동 정보 (key: $bindingKey, value: $customParamState)")
-            // 이 라인에서 세션에 저장된 최종 키 목록을 정확히 출력합니다.
+            println("✅ 세션에 연동 요청 플래그 설정")
             println("Session attributes after save (detailed): ${session.attributeNames.toList().joinToString(", ")}")
         } else {
             println("📦 클라이언트 전달 state 파라미터 (일반): $customParamState")
@@ -81,6 +78,9 @@ class CustomAuthorizationRequestRepository : AuthorizationRequestRepository<OAut
 
         // 세션에서 OAuth2AuthorizationRequest 제거 (Spring Security가 요구하는 부분)
         session.removeAttribute(SESSION_ATTR_NAME)
+
+        // 연동 요청 플래그도 함께 제거 (선택 사항, CustomOidcUserService에서 제거하는 것이 더 명확)
+        session.removeAttribute(SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE)
 
         println("DEBUG: removeAuthorizationRequest - Session attributes after removal: ${session.attributeNames.toList().joinToString(", ")}")
 

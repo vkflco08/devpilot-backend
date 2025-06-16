@@ -61,18 +61,40 @@ class CustomOidcUserService(
 
         val BIND_STATE_PREFIX = "bind:" // 연동 요청을 식별하는 접두사
 
-        var extractedBindingState: String? = null
-        // 반환된 Spring Security state가 null이 아니면, 이를 키로 사용하여 세션에서 연동용 state를 찾습니다.
-        if (returnedSpringSecurityState != null) {
-            extractedBindingState = request.session.getAttribute(
-                SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE + "_" + returnedSpringSecurityState
-            ) as? String
+        // 연동 요청인지 확인합니다.
+        // 방법 1: Google로부터 반환된 state 값이 "bind:"로 시작하는지 확인 (컨트롤러에서 그렇게 보냈다면)
+        // 방법 2: 세션에 저장된 연동 플래그를 확인
+        // 지금 컨트롤러에서 Google의 `state` 파라미터에 `bind:UUID`를 통째로 넣고 있으므로, 방법 1을 사용합니다.
+        // 그리고 `CustomAuthorizationRequestRepository`에서 `SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE`
+        // 키로 `true` 플래그를 저장했으므로, 이 플래그도 함께 확인하는 것이 좋습니다.
+
+        var isBindingRequest = false
+        var extractedBindingState: String? = null // 이 변수에 `bind:UUID` 문자열이 저장될 것
+
+        // 1. 세션에 연동 요청 플래그가 있는지 확인
+        val bindingFlag = request.session.getAttribute(SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE) as? Boolean
+        if (bindingFlag == true) {
+            isBindingRequest = true
+            // 플래그를 제거하여 다음 요청에 영향을 주지 않도록 합니다.
+            request.session.removeAttribute(SPRING_SECURITY_OAUTH2_AUTHORIZATION_REQUEST_BINDING_STATE)
+            println("DEBUG: Removed binding request flag from session.")
         }
 
-        println("추출된 연동용 state: ${extractedBindingState}")
+        // 2. IdP로부터 반환된 'state' 파라미터 자체가 "bind:"로 시작하는지 확인
+        //    (컨트롤러에서 그렇게 구성하여 Google에 보냈기 때문)
+        if (returnedSpringSecurityState != null && returnedSpringSecurityState.startsWith(BIND_STATE_PREFIX)) {
+            isBindingRequest = true
+            extractedBindingState = returnedSpringSecurityState // 이 값이 "bind:UUID"
+        }
 
-        // 추출된 연동용 state가 존재하고, "bind:" 접두사로 시작하면 bindSocialAccount 호출, 아니면 loginOrRegister 호출
-        return if (extractedBindingState != null && extractedBindingState.startsWith(BIND_STATE_PREFIX)) {
+        println("추출된 연동용 state (bind:UUID): ${extractedBindingState}") // "bind:UUID"가 여기 찍혀야 합니다.
+        println("연동 요청 여부: ${isBindingRequest}")
+
+        // extractedBindingState가 null이 아니고, "bind:" 접두사로 시작하며, 연동 요청으로 판단되면
+        // bindSocialAccount 호출, 아니면 loginOrRegister 호출
+        // bindSocialAccount에는 "bind:UUID" 문자열이 state로 전달됩니다.
+        return if (isBindingRequest && extractedBindingState != null && extractedBindingState.startsWith(BIND_STATE_PREFIX)) {
+            // 이제 extractedBindingState는 "bind:UUID" 값을 가집니다.
             bindSocialAccount(extractedBindingState, oauth2UserInfo, provider, oidcUser, request)
         } else {
             loginOrRegister(oauth2UserInfo, provider, userRequest, oidcUser)
@@ -86,10 +108,13 @@ class CustomOidcUserService(
         oidcUser: OidcUser,
         request: HttpServletRequest
     ): OidcUser {
-        // 잘못된 계정 연동 요청 (세션에 userId가 없거나 state가 유효하지 않을 때)
-        val invalidBindingEx = InvalidBindingRequestException()
         val userId = request.session.getAttribute(state) as? Long
-            ?: throw OAuth2AuthenticationException(OAuth2Error(invalidBindingEx.resultCode, invalidBindingEx.message, null), invalidBindingEx)
+            ?: throw OAuth2AuthenticationException(
+                OAuth2Error(InvalidBindingRequestException().resultCode, InvalidBindingRequestException().message, null),
+                InvalidBindingRequestException()
+            )
+
+        println("DEBUG: bindSocialAccount에서 세션으로부터 가져온 userId: $userId")
 
         // 사용자를 찾을 수 없을 때
         val userNotFoundEx = UserNotFoundException()
