@@ -60,20 +60,17 @@ class AuthenticationController(
         response: HttpServletResponse,
         authentication: Authentication
     ): BaseResponse<String> {
-        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+        val currentUserId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
-        println("🔗 계정 연동 요청: userId = $userId, provider = google")
+        println("🔗 계정 연동 요청: userId = $currentUserId, provider = google")
 
         // state를 위한 랜덤 값 생성
-        val stateToken = "bind:${UUID.randomUUID()}"
-
-        // 세션에 userId <-> state 매핑 저장 (예: request.session.setAttribute("bind:<UUID>", userId))
-        request.session.setAttribute(stateToken, userId)
-        println("🧩 저장된 state = $stateToken → userId = $userId")
+        val bindingStateToken = "bind:${UUID.randomUUID()}"
 
         val redirectUri = UriComponentsBuilder
             .fromUriString("$beBaseUrl/oauth2/authorization/google")
-            .queryParam("my_custom_bind_state", stateToken)
+            .queryParam("binding_user_id", currentUserId)
+            .queryParam("binding_state_token", bindingStateToken)
             .build().toUriString()
 
         return BaseResponse.success(data = redirectUri)
