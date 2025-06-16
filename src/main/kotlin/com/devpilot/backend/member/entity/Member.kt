@@ -2,8 +2,8 @@ package com.devpilot.backend.member.entity
 
 import BaseEntity
 import com.devpilot.backend.member.dto.MemberDtoResponse
-import com.devpilot.backend.member.enum.AuthProvider
 import com.memo.memo.common.status.ROLE
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -24,7 +24,6 @@ import lombok.Getter
 @Getter
 @Table(
     uniqueConstraints = [
-        UniqueConstraint(name = "uk_member_login_id", columnNames = ["loginId"]),
         UniqueConstraint(name = "uk_member_email_provider", columnNames = ["email", "provider"])
     ],
 )
@@ -52,22 +51,11 @@ class Member(
     var description: String,
 
     // 소셜 로그인 관련 필드 추가
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    val provider: AuthProvider = AuthProvider.LOCAL,
-
-    // 소셜 로그인 제공자의 사용자 ID
-    @Column(nullable = true, length = 100)
-    val providerId: String? = null,
+    @OneToMany(mappedBy = "member", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    val authProviders: MutableList<MemberAuthProvider> = mutableListOf(),
 ) : BaseEntity() {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "member")
     val memberRole: List<MemberRole>? = null
-
-    // 소셜 로그인 사용자인지 확인하는 메서드
-    fun isSocialUser(): Boolean = provider != AuthProvider.LOCAL
-
-    // 로그인 가능한 사용자인지 확인 (loginId나 소셜 로그인 정보가 있어야 함)
-    fun canLogin(): Boolean = loginId != null || (provider != AuthProvider.LOCAL && providerId != null)
 
     fun toDto(): MemberDtoResponse =
         MemberDtoResponse(
@@ -79,15 +67,14 @@ class Member(
             role = this.role,
             phoneNumber = this.phoneNumber,
             department = this.department,
-            description = this.description
+            description = this.description,
+            providers = this.authProviders.map { it.provider }
         )
 
     companion object {
         fun createSocialMember(
             email: String,
             name: String,
-            provider: AuthProvider,
-            providerId: String,
             department: String = "일반",
             phoneNumber: String = "",
             description: String = "소셜 로그인 사용자"
@@ -101,9 +88,16 @@ class Member(
                 phoneNumber = phoneNumber,
                 department = department,
                 description = description,
-                provider = provider,
-                providerId = providerId
             )
+        }
+    }
+
+    fun addAuthProviderIfNotExists(newProvider: MemberAuthProvider) {
+        val exists = authProviders.any {
+            it.provider == newProvider.provider && it.providerId == newProvider.providerId
+        }
+        if (!exists) {
+            authProviders.add(newProvider)
         }
     }
 }

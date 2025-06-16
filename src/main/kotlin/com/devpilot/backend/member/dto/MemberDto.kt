@@ -2,6 +2,7 @@ package com.devpilot.backend.member.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.devpilot.backend.member.entity.Member
+import com.devpilot.backend.member.enum.AuthProvider
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
@@ -87,18 +88,13 @@ data class MemberDtoResponse(
     val phoneNumber: String,
     val department: String,
     val description: String,
+    val providers: List<AuthProvider>,
 )
 
 data class MemberProfileDtoRequest(
     @field:NotBlank(message = "이름은 필수 항목입니다.")
     @JsonProperty("name")
     var name: String,
-    @field:NotBlank(message = "이메일은 필수 항목입니다.")
-    @field:Email(message = "유효하지 않은 이메일 형식입니다.")
-    @JsonProperty("email")
-    var email: String,
-//    var profileImage: String? = null,
-    // 프로필 이미지 URL (선택)
     @field:NotBlank
     @JsonProperty("role")
     var role: String,
@@ -119,8 +115,6 @@ data class MemberProfileDtoRequest(
     fun toEntity(existingMember: Member): Member =
         existingMember.apply {
             this.name = this@MemberProfileDtoRequest.name
-            this.email = this@MemberProfileDtoRequest.email
-//            this.profileImage = this@MemberProfileDtoRequest.profileImage
             this.role = this@MemberProfileDtoRequest.role
             this.phoneNumber = this@MemberProfileDtoRequest.phoneNumber
             this.department = this@MemberProfileDtoRequest.department

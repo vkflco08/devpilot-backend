@@ -1,7 +1,8 @@
 package com.devpilot.backend.common.authority
 
 import com.devpilot.backend.common.ratelimit.RateLimitFilter
-import com.devpilot.backend.member.service.CustomOAuth2UserService
+import com.devpilot.backend.common.repository.CustomAuthorizationRequestRepository
+import com.devpilot.backend.member.service.CustomOidcUserService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -10,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
@@ -24,7 +27,7 @@ class SecurityConfig(
     private val jwtTokenProvider: JwtTokenProvider,
     private val rateLimitFilter: RateLimitFilter,
     @Value("\${cors.allowed.origins}") private val allowedOrigins: List<String>,
-    private val customOAuth2UserService: CustomOAuth2UserService,
+    private val customOidcUserService: CustomOidcUserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
 ) {
@@ -36,8 +39,11 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .oauth2Login { oauth2 ->
                 oauth2
+                    .authorizationEndpoint { authEndpoint ->
+                        authEndpoint.authorizationRequestRepository(authorizationRequestRepository())
+                    }
                     .userInfoEndpoint { userInfo ->
-                        userInfo.userService(customOAuth2UserService)
+                        userInfo.oidcUserService(customOidcUserService)
                     }
                     .successHandler(oAuth2SuccessHandler)
                     .failureHandler(oAuth2FailureHandler)
@@ -53,6 +59,7 @@ class SecurityConfig(
                         "/api/task/**",
                         "/api/project/**",
                         "/api/member/**",
+                        "/api/auth/bind/google"
                     ).hasRole("MEMBER")
                     .requestMatchers(
                         "/swagger-ui/**",
@@ -89,5 +96,10 @@ class SecurityConfig(
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
         return source
+    }
+
+    @Bean
+    fun authorizationRequestRepository(): AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
+        return CustomAuthorizationRequestRepository()
     }
 }
