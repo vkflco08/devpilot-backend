@@ -38,7 +38,7 @@ class ProjectController(
     /**
      * 모든 프로젝트와 태스크 조회
      */
-    @GetMapping("/mypqge")
+    @GetMapping("/mypage")
     fun getMypageProjects(): BaseResponse<List<ProjectResponse>> {
         val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
