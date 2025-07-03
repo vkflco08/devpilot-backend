@@ -10,7 +10,6 @@ import com.devpilot.backend.task.dto.TaskStatusUpdateRequest
 import com.devpilot.backend.task.dto.TaskTagUpdateRequest
 import com.devpilot.backend.task.dto.TaskTimeUpdateRequest
 import com.devpilot.backend.task.dto.TaskUpdateRequest
-import com.devpilot.backend.task.repository.TaskRepository
 import com.devpilot.backend.task.service.TaskService
 import jakarta.validation.Valid
 import org.springframework.security.core.context.SecurityContextHolder
@@ -27,8 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/task")
 class TaskController(
-    private val taskService: TaskService,
-    private val taskRepository: TaskRepository,
+    private val taskService: TaskService
 ) {
 
     /**

@@ -120,7 +120,7 @@ class TaskService(
     }
 
     fun getAllTasks(userId: Long): List<TaskResponse>? {
-        val findTasks: List<Task> = taskRepository.findAllByMemberId(userId)
+        val findTasks: List<Task> = taskRepository.findAllByMemberIdAndProjectStatus(userId)
         return findTasks.map { task -> task.toResponse() }
     }
 }

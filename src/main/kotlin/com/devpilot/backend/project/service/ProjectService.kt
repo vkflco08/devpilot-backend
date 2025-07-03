@@ -17,8 +17,14 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
 ) {
 
-    fun getAllTasks(userId: Long): List<ProjectResponse> {
+    fun getMypageProjects(userId: Long): List<ProjectResponse> {
         val findProjects: List<Project> = projectRepository.findAllByMemberIdWithTasks(userId)
+        if(findProjects.isEmpty()) throw ProjectNotFoundException()
+        return findProjects.map { project -> project.toResponse() }
+    }
+
+    fun getDashboardProjects(userId: Long): List<ProjectResponse> {
+        val findProjects: List<Project> = projectRepository.findAllByMemberIdAndStatusWithTasks(userId)
         if(findProjects.isEmpty()) throw ProjectNotFoundException()
         return findProjects.map { project -> project.toResponse() }
     }
@@ -53,6 +59,7 @@ class ProjectService(
 
         request.projectName.let { project.name = it }
         request.projectDescription.let { project.description = it }
+        request.projectStatus.let { project.status = it }
 
         val updated = projectRepository.save(project)
         return updated.toResponse()
