@@ -36,13 +36,24 @@ class ProjectController(
     }
 
     /**
-     * 전체 프로젝트와 태스크 조회
+     * 모든 프로젝트와 태스크 조회
      */
-    @GetMapping("/all")
-    fun getAll(): BaseResponse<List<ProjectResponse>> {
+    @GetMapping("/mypqge")
+    fun getMypageProjects(): BaseResponse<List<ProjectResponse>> {
         val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
-        val response = projectService.getAllTasks(userId)
+        val response = projectService.getMypageProjects(userId)
+        return BaseResponse.success(data = response)
+    }
+
+    /**
+     * 진행중인 프로젝트와 태스크 조회
+     */
+    @GetMapping("/dashboard")
+    fun getDashboardProjects(): BaseResponse<List<ProjectResponse>> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+        val response = projectService.getDashboardProjects(userId)
         return BaseResponse.success(data = response)
     }
 

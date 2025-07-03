@@ -3,9 +3,12 @@ package com.devpilot.backend.project.entity
 import BaseEntity
 import com.devpilot.backend.member.entity.Member
 import com.devpilot.backend.project.dto.ProjectResponse
+import com.devpilot.backend.project.enum.ProjectStatus
 import com.devpilot.backend.task.entity.Task
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -26,6 +29,9 @@ data class Project(
     var name: String,
 
     var description: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    var status: ProjectStatus = ProjectStatus.ACTIVE,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
