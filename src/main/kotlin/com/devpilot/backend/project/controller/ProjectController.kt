@@ -5,6 +5,7 @@ import com.devpilot.backend.common.dto.CustomSecurityUserDetails
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
+import com.devpilot.backend.project.dto.ProjectWithStatusResponse
 import com.devpilot.backend.project.service.ProjectService
 import jakarta.validation.Valid
 import org.springframework.security.core.context.SecurityContextHolder
@@ -39,7 +40,7 @@ class ProjectController(
      * 모든 프로젝트와 태스크 조회
      */
     @GetMapping("/mypage")
-    fun getMypageProjects(): BaseResponse<List<ProjectResponse>> {
+    fun getMypageProjects(): BaseResponse<List<ProjectWithStatusResponse>> {
         val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
             ?: throw UserNotFoundException()
         val response = projectService.getMypageProjects(userId)
