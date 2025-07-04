@@ -6,6 +6,7 @@ import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.repository.MemberRepository
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
+import com.devpilot.backend.project.dto.ProjectWithStatusResponse
 import com.devpilot.backend.project.entity.Project
 import com.devpilot.backend.project.repository.ProjectRepository
 import jakarta.transaction.Transactional
@@ -17,10 +18,10 @@ class ProjectService(
     private val projectRepository: ProjectRepository,
 ) {
 
-    fun getMypageProjects(userId: Long): List<ProjectResponse> {
+    fun getMypageProjects(userId: Long): List<ProjectWithStatusResponse> {
         val findProjects: List<Project> = projectRepository.findAllByMemberIdWithTasks(userId)
         if(findProjects.isEmpty()) throw ProjectNotFoundException()
-        return findProjects.map { project -> project.toResponse() }
+        return findProjects.map { project -> project.toWithStatusResponse() }
     }
 
     fun getDashboardProjects(userId: Long): List<ProjectResponse> {

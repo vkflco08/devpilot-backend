@@ -3,6 +3,7 @@ package com.devpilot.backend.project.entity
 import BaseEntity
 import com.devpilot.backend.member.entity.Member
 import com.devpilot.backend.project.dto.ProjectResponse
+import com.devpilot.backend.project.dto.ProjectWithStatusResponse
 import com.devpilot.backend.project.enum.ProjectStatus
 import com.devpilot.backend.task.entity.Task
 import jakarta.persistence.CascadeType
@@ -48,6 +49,18 @@ data class Project(
             tasks = this.tasks.map { task -> task.toResponse() },
             createdDate = createdDate,
             lastModifiedDate = lastModifiedDate,
+        )
+    }
+
+    fun toWithStatusResponse(): ProjectWithStatusResponse {
+        return ProjectWithStatusResponse(
+            id = this.id,
+            name = this.name,
+            description = this.description,
+            status = this.status,
+            tasks = this.tasks.map { task -> task.toResponse() },
+            createdDate = this.createdDate,
+            lastModifiedDate = this.lastModifiedDate
         )
     }
 }
