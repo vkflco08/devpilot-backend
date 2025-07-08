@@ -49,7 +49,7 @@ class OAuth2SuccessHandler(
 
         signService.saveRefreshToken(member, refreshToken)
 
-        response.addCookie(Cookie("task-manager-refreshToken", refreshToken).apply {
+        response.addCookie(Cookie("task-pilot-refreshToken", refreshToken).apply {
             isHttpOnly = true
             secure = true
             path = "/"
@@ -58,7 +58,7 @@ class OAuth2SuccessHandler(
 
         val redirectUri = UriComponentsBuilder
             .fromUriString("${fronturl.first()}/oauth/callback")
-            .queryParam("task-manager-accessToken", accessToken)
+            .queryParam("task-pilot-accessToken", accessToken)
             .build()
             .toUriString()
 

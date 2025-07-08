@@ -64,7 +64,7 @@ class SignService(
 
         val newAccessToken = jwtTokenProvider.createAccessToken(authentication)
 
-        val cookie = Cookie("refreshToken", storedRefreshToken).apply {
+        val cookie = Cookie("task-pilot-refreshToken", storedRefreshToken).apply {
             isHttpOnly = true
             secure = true
             path = "/"
