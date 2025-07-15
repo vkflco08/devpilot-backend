@@ -70,5 +70,5 @@ data class Task(
 }
 
 enum class TaskStatus {
-    TODO, DOING, DONE
+    TODO, DOING, DONE, BLOCKED
 }
