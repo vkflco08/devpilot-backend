@@ -40,6 +40,7 @@ class TaskService(
             findProject = projectRepository.findByIdAndMemberId(request.projectId, userId)
                 ?: throw ProjectNotFoundException()
         }
+        val findParentTask = taskRepository.findByIdOrNull(request.parentId);
 
         val task = Task(
             member = findMember,
@@ -50,6 +51,7 @@ class TaskService(
             priority = request.priority,
             dueDate = request.dueDate,
             estimatedTimeHours = request.estimatedTimeHours,
+            parent = findParentTask,
             project = findProject
         )
         val saved = taskRepository.save(task)
