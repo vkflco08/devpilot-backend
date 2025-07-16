@@ -63,6 +63,7 @@ data class Task(
         tags = tags,
         priority = priority,
         dueDate = dueDate,
+        parentId = parent?.id,
         estimatedTimeHours = estimatedTimeHours,
         createdDate = createdDate,
         lastModifiedDate = lastModifiedDate,
