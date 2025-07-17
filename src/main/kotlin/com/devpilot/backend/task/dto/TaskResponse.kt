@@ -17,4 +17,5 @@ data class TaskResponse(
     val estimatedTimeHours: Double?,
     val createdDate: LocalDateTime?,
     val lastModifiedDate: LocalDateTime?,
+    val previousStatus: TaskStatus?,
 )

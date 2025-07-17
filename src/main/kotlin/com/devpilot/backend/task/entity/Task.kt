@@ -53,6 +53,9 @@ data class Task(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     var project: Project? = null,
+
+    @Enumerated(EnumType.STRING)
+    var previousStatus: TaskStatus? = null,
 ): BaseEntity() {
     fun toResponse() = TaskResponse(
         id = id,
@@ -67,6 +70,7 @@ data class Task(
         estimatedTimeHours = estimatedTimeHours,
         createdDate = createdDate,
         lastModifiedDate = lastModifiedDate,
+        previousStatus = previousStatus
     )
 }
 
