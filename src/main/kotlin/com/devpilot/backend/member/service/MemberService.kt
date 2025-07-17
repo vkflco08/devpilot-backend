@@ -90,7 +90,7 @@ class MemberService(
         }
         response.addCookie(cookie)
 
-        return TokenInfo("Bearer", accessToken)
+        return TokenInfo("Bearer", accessToken, refreshToken)
     }
 
     /**

@@ -6,4 +6,5 @@ import lombok.NoArgsConstructor
 data class TokenInfo(
     val grantType: String,
     var accessToken: String,
+    val refreshToken: String,
 )
