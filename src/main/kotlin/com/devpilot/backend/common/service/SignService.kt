@@ -14,6 +14,7 @@ import com.devpilot.backend.member.repository.MemberRepository
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.transaction.Transactional
+import kotlinx.serialization.MissingFieldException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import java.util.*
@@ -47,8 +48,15 @@ class SignService(
         }
     }
 
-    fun newAccessToken(request: TokenDtoRequest, response: HttpServletResponse): TokenInfo {
-        val refreshToken = request.refreshToken
+    fun newAccessToken(requestRefreshToken: String?, response: HttpServletResponse): TokenInfo {
+        val refreshToken = requestRefreshToken
+            if(refreshToken.isNullOrBlank()) {
+                throw TokenValidationException(
+                    resultCode = "REFRESH_TOKEN_VALIDATION",
+                    message = "refreshToken은 null일 수 없습니다.",
+                    httpStatus = HttpStatus.BAD_REQUEST
+                )
+            }
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw TokenValidationException(
