@@ -11,5 +11,6 @@ data class TaskUpdateRequest(
     val priority: Int?,
     val dueDate: LocalDate?,
     val estimatedTimeHours: Double?,
-    val actualTimeHours: Double?
+    val actualTimeHours: Double?,
+    val previousStatus: TaskStatus?
 )

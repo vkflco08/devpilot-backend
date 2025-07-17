@@ -13,4 +13,5 @@ data class TaskCreateRequest(
     val status: TaskStatus,
     val parentId: Long?,
     val projectId: Long? = null,
+    val previousStatus: TaskStatus? = null,
 )
