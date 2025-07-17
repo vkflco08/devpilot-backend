@@ -3,6 +3,7 @@ package com.devpilot.backend.common.authority
 import com.devpilot.backend.common.ratelimit.RateLimitFilter
 import com.devpilot.backend.common.repository.CustomAuthorizationRequestRepository
 import com.devpilot.backend.member.service.CustomOidcUserService
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -30,6 +31,7 @@ class SecurityConfig(
     private val customOidcUserService: CustomOidcUserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
+    private val objectMapper: ObjectMapper,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -80,7 +82,7 @@ class SecurityConfig(
     }
 
     @Bean
-    fun customAuthenticationEntryPoint(): AuthenticationEntryPoint = CustomAuthenticationEntryPoint()
+    fun customAuthenticationEntryPoint(): AuthenticationEntryPoint = CustomAuthenticationEntryPoint(objectMapper)
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()

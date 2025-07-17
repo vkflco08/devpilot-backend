@@ -53,7 +53,7 @@ class OAuth2SuccessHandler(
             isHttpOnly = true
             secure = true
             path = "/"
-            maxAge = 60 * 60 * 24 * 7
+            maxAge = (REFRESH_EXPIRATION_MILLISECONDS / 1000).toInt()
         })
 
         val redirectUri = UriComponentsBuilder
