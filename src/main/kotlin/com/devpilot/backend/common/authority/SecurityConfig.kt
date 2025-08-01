@@ -67,6 +67,7 @@ class SecurityConfig(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/oauth2/**",
+                        "/api/agent/**" // LLM에 대한 로직은 일단 열어두기
                     ).permitAll()
             }.exceptionHandling { it.authenticationEntryPoint(customAuthenticationEntryPoint()) }
             .addFilterBefore(

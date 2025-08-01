@@ -1,7 +1,6 @@
 package com.devpilot.backend.project.service
 
 import com.devpilot.backend.common.exception.exceptions.ProjectNotFoundException
-import com.devpilot.backend.common.exception.exceptions.TaskNotFoundException
 import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.member.repository.MemberRepository
 import com.devpilot.backend.project.dto.ProjectRequest
