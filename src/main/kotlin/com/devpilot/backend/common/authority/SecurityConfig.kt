@@ -21,6 +21,7 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import com.fasterxml.jackson.databind.ObjectMapper // ObjectMapper 임포트 추가
 
 @Configuration
 @EnableWebSecurity
@@ -32,9 +33,10 @@ class SecurityConfig(
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
     private val customAccessDeniedHandler: CustomAccessDeniedHandler,
+    private val objectMapper: ObjectMapper
 ) {
     @Bean
-    fun filterChain(http: HttpSecurity, customAccessDeniedHandler: CustomAccessDeniedHandler): SecurityFilterChain {
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .httpBasic { it.disable() }
             .csrf { it.disable() }
@@ -68,6 +70,7 @@ class SecurityConfig(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/oauth2/**",
+                        "/error"
                     ).permitAll()
             }.exceptionHandling {
                 it.authenticationEntryPoint(customAuthenticationEntryPoint())
@@ -107,5 +110,10 @@ class SecurityConfig(
     @Bean
     fun authorizationRequestRepository(): AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
         return CustomAuthorizationRequestRepository()
+    }
+
+    @Bean
+    fun objectMapper(): ObjectMapper {
+        return ObjectMapper()
     }
 }
