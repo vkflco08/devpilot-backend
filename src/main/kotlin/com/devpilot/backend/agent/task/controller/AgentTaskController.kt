@@ -1,7 +1,9 @@
-package com.devpilot.agent.task.controller
+package com.devpilot.backend.agent.task.controller
 
-import com.devpilot.agent.task.service.AgentTaskService
+import com.devpilot.backend.agent.task.service.AgentTaskService
 import com.devpilot.backend.common.dto.BaseResponse
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
+import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.task.dto.TaskCreateRequest
 import com.devpilot.backend.task.dto.TaskResponse
 import com.devpilot.backend.task.dto.TaskScheduleUpdateRequest
@@ -9,6 +11,7 @@ import com.devpilot.backend.task.dto.TaskStatusUpdateRequest
 import com.devpilot.backend.task.dto.TaskTagUpdateRequest
 import com.devpilot.backend.task.dto.TaskUpdateRequest
 import jakarta.validation.Valid
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -31,9 +34,11 @@ class AgentTaskController(
      */
     @PostMapping("/new")
     fun createAgentTask(
-        @RequestHeader("X-User-ID") userId: Long,
         @Valid @RequestBody request: TaskCreateRequest
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.createAgentTask(userId, request)
         return BaseResponse.success(data = response)
     }
@@ -43,7 +48,10 @@ class AgentTaskController(
      * GET /api/agent/tasks/all
      */
     @GetMapping("/all")
-    fun getAllAgentTasks(@RequestHeader("X-User-ID") userId: Long): BaseResponse<List<TaskResponse>> {
+    fun getAllAgentTasks(): BaseResponse<List<TaskResponse>> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.getAllAgentTasks(userId)
         return BaseResponse.success(data = response)
     }
@@ -54,9 +62,11 @@ class AgentTaskController(
      */
     @GetMapping("/{taskId}")
     fun getSingleAgentTask(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.getSingleAgentTask(userId, taskId)
         return BaseResponse.success(data = response)
     }
@@ -67,10 +77,12 @@ class AgentTaskController(
      */
     @PutMapping("/{taskId}")
     fun updateAgentTask(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long,
         @Valid @RequestBody request: TaskUpdateRequest
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.updateAgentTask(userId, taskId, request)
         return BaseResponse.success(data = response)
     }
@@ -81,9 +93,11 @@ class AgentTaskController(
      */
     @DeleteMapping("/{taskId}")
     fun deleteAgentTask(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long
     ): BaseResponse<Unit> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.deleteAgentTask(userId, taskId)
         return BaseResponse.success(data = response)
     }
@@ -94,10 +108,12 @@ class AgentTaskController(
      */
     @PatchMapping("/{taskId}/status")
     fun updateAgentTaskStatus(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long,
         @Valid @RequestBody request: TaskStatusUpdateRequest
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.updateAgentTaskStatus(userId, taskId, request)
         return  BaseResponse.success(data = response)
     }
@@ -108,10 +124,12 @@ class AgentTaskController(
      */
     @PatchMapping("/{taskId}/tags")
     fun updateAgentTaskTags(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long,
         @Valid @RequestBody request: TaskTagUpdateRequest
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.updateAgentTaskTags(userId, taskId, request)
          return BaseResponse.success(data = response)
     }
@@ -122,10 +140,12 @@ class AgentTaskController(
      */
     @PatchMapping("/{taskId}/schedule")
     fun updateAgentTaskSchedule(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable taskId: Long,
         @Valid @RequestBody request: TaskScheduleUpdateRequest
     ): BaseResponse<TaskResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentTaskService.updateAgentTaskSchedule(userId, taskId, request)
         return BaseResponse.success(data = response)
     }

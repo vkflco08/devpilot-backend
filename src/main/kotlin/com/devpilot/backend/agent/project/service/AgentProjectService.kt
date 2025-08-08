@@ -1,4 +1,4 @@
-package com.devpilot.agent.project.service
+package com.devpilot.backend.agent.project.service
 
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
