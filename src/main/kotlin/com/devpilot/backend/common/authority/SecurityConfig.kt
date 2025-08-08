@@ -21,7 +21,6 @@ import org.springframework.security.web.servletapi.SecurityContextHolderAwareReq
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
-import com.fasterxml.jackson.databind.ObjectMapper // ObjectMapper 임포트 추가
 
 @Configuration
 @EnableWebSecurity
