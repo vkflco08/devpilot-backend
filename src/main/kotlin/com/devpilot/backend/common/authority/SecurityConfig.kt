@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter
 import org.springframework.web.cors.CorsConfiguration
@@ -31,8 +32,7 @@ class SecurityConfig(
     private val customOidcUserService: CustomOidcUserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
-    private val customAccessDeniedHandler: CustomAccessDeniedHandler,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) {
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
@@ -62,18 +62,17 @@ class SecurityConfig(
                         "/api/task/**",
                         "/api/project/**",
                         "/api/member/**",
-                        "/api/auth/bind/google",
-                        "/api/agent/**"
+                        "/api/auth/bind/google"
                     ).hasRole("MEMBER")
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/oauth2/**",
-                        "/error"
+                        "/api/agent/**" // LLM에 대한 로직은 일단 열어두기
                     ).permitAll()
             }.exceptionHandling {
                 it.authenticationEntryPoint(customAuthenticationEntryPoint())
-                it.accessDeniedHandler(customAccessDeniedHandler)
+                it.accessDeniedHandler(customAccessDeniedHandler())
             }
             .addFilterBefore(
                 rateLimitFilter,
@@ -89,6 +88,9 @@ class SecurityConfig(
 
     @Bean
     fun customAuthenticationEntryPoint(): AuthenticationEntryPoint = CustomAuthenticationEntryPoint(objectMapper)
+
+    @Bean
+    fun customAccessDeniedHandler(): AccessDeniedHandler = CustomAccessDeniedHandler(objectMapper)
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
@@ -109,10 +111,5 @@ class SecurityConfig(
     @Bean
     fun authorizationRequestRepository(): AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
         return CustomAuthorizationRequestRepository()
-    }
-
-    @Bean
-    fun objectMapper(): ObjectMapper {
-        return ObjectMapper()
     }
 }
