@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.util.UriComponentsBuilder
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.web.bind.annotation.CookieValue
 import java.util.*
 import java.util.stream.Collectors
 
@@ -31,10 +32,10 @@ class AuthenticationController(
 ) {
     @PostMapping("/refresh")
     fun refreshAccessToken(
-        @RequestBody tokenRequestDto: TokenDtoRequest,
+        @CookieValue(name = "task-pilot-refreshToken", required = false) refreshToken: String?,
         response: HttpServletResponse,
     ): BaseResponse<TokenInfo> {
-        val newAccessToken = signService.newAccessToken(tokenRequestDto, response)
+        val newAccessToken = signService.newAccessToken(refreshToken, response)
         return BaseResponse.success(data = newAccessToken)
     }
 

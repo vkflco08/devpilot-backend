@@ -33,27 +33,34 @@ class TaskService(
 
     @Transactional
     fun createTask(userId: Long, request: TaskCreateRequest): TaskResponse {
-        val findMember = memberRepository.findByIdOrNull(userId)
-            ?: throw UserNotFoundException()
-        var findProject: Project? = null
-        if(request.projectId != null){
-            findProject = projectRepository.findByIdAndMemberId(request.projectId, userId)
+        val member = memberRepository.findById(userId).orElseThrow { UserNotFoundException() } // 이 부분에서 userId가 null이면 UserNotFoundException 발생
+
+        val project = request.projectId?.let { projectId ->
+            projectRepository.findByIdAndMemberId(projectId, userId)
                 ?: throw ProjectNotFoundException()
         }
 
+        val parentTask = request.parentId?.let { parentId ->
+            taskRepository.findByIdAndMemberId(parentId, userId)
+                ?: throw TaskNotFoundException()
+        }
+
         val task = Task(
-            member = findMember,
             title = request.title,
             description = request.description,
             status = request.status,
             tags = request.tags,
-            priority = request.priority,
+            priority = request.priority ?: 3,
             dueDate = request.dueDate,
             estimatedTimeHours = request.estimatedTimeHours,
-            project = findProject
+            member = member,
+            project = project,
+            parent = parentTask,
+            previousStatus = request.previousStatus
         )
-        val saved = taskRepository.save(task)
-        return saved.toResponse()
+
+        val savedTask = taskRepository.save(task)
+        return savedTask.toResponse()
     }
 
     @Transactional
@@ -68,6 +75,7 @@ class TaskService(
         request.priority?.let { task.priority = it }
         request.dueDate?.let { task.dueDate = it }
         request.estimatedTimeHours?.let { task.estimatedTimeHours = it }
+        request.previousStatus?.let { task.previousStatus = it }
 
         val updated = taskRepository.save(task)
         return updated.toResponse()
@@ -84,7 +92,15 @@ class TaskService(
     fun updateTaskStatus(userId: Long, taskId: Long, status: TaskStatus): TaskResponse {
         val task = taskRepository.findByIdAndMemberId(taskId, userId)
             ?: throw TaskNotFoundException()
+
+        if (status == TaskStatus.DONE) {
+            task.previousStatus = task.status // 현재 상태를 이전 상태로 저장
+        } else if (task.status == TaskStatus.DONE && status != TaskStatus.DONE) {
+            // DONE에서 다른 상태로 변경될 경우 previousStatus를 초기화 (선택적)
+            task.previousStatus = null
+        }
         task.status = status
+
         val updated = taskRepository.save(task)
         return updated.toResponse()
     }

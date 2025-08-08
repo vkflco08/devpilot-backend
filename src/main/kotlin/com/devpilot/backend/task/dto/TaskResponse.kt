@@ -12,8 +12,10 @@ data class TaskResponse(
     val status: TaskStatus,
     val tags: String?,
     val priority: Int?,
+    val parentId: Long?,
     val dueDate: LocalDate?,
     val estimatedTimeHours: Double?,
     val createdDate: LocalDateTime?,
     val lastModifiedDate: LocalDateTime?,
+    val previousStatus: TaskStatus?,
 )
