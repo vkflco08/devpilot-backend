@@ -31,10 +31,10 @@ class SecurityConfig(
     private val customOidcUserService: CustomOidcUserService,
     private val oAuth2SuccessHandler: OAuth2SuccessHandler,
     private val oAuth2FailureHandler: OAuth2FailureHandler,
-    private val objectMapper: ObjectMapper,
+    private val customAccessDeniedHandler: CustomAccessDeniedHandler,
 ) {
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain {
+    fun filterChain(http: HttpSecurity, customAccessDeniedHandler: CustomAccessDeniedHandler): SecurityFilterChain {
         http
             .httpBasic { it.disable() }
             .csrf { it.disable() }
@@ -61,15 +61,18 @@ class SecurityConfig(
                         "/api/task/**",
                         "/api/project/**",
                         "/api/member/**",
-                        "/api/auth/bind/google"
+                        "/api/auth/bind/google",
+                        "/api/agent/**"
                     ).hasRole("MEMBER")
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/oauth2/**",
-                        "/api/agent/**" // LLM에 대한 로직은 일단 열어두기
                     ).permitAll()
-            }.exceptionHandling { it.authenticationEntryPoint(customAuthenticationEntryPoint()) }
+            }.exceptionHandling {
+                it.authenticationEntryPoint(customAuthenticationEntryPoint())
+                it.accessDeniedHandler(customAccessDeniedHandler)
+            }
             .addFilterBefore(
                 rateLimitFilter,
                 SecurityContextHolderAwareRequestFilter::class.java,

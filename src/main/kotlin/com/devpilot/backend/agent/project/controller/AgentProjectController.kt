@@ -1,18 +1,20 @@
-package com.devpilot.agent.project.controller
+package com.devpilot.backend.agent.project.controller
 
-import com.devpilot.agent.project.service.AgentProjectService
+import com.devpilot.backend.agent.project.service.AgentProjectService
 import com.devpilot.backend.common.dto.BaseResponse
+import com.devpilot.backend.common.dto.CustomSecurityUserDetails
+import com.devpilot.backend.common.exception.exceptions.UserNotFoundException
 import com.devpilot.backend.project.dto.ProjectRequest
 import com.devpilot.backend.project.dto.ProjectResponse
 import com.devpilot.backend.project.dto.ProjectWithStatusResponse
 import jakarta.validation.Valid
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -27,9 +29,11 @@ class AgentProjectController(
      */
     @PostMapping("/new")
     fun createAgentProject(
-        @RequestHeader("X-User-ID") userId: Long,
         @Valid @RequestBody request: ProjectRequest
     ): BaseResponse<ProjectResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.createAgentProject(userId, request)
         return BaseResponse.success(data = response)
     }
@@ -39,7 +43,10 @@ class AgentProjectController(
      * GET /api/agent/projects/mypage
      */
     @GetMapping("/mypage")
-    fun getAllAgentProjectsWithTasks(@RequestHeader("X-User-ID") userId: Long): BaseResponse<List<ProjectWithStatusResponse>> {
+    fun getAllAgentProjectsWithTasks(): BaseResponse<List<ProjectWithStatusResponse>> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.getAllAgentProjectsWithTasks(userId)
         return BaseResponse.success(data = response)
     }
@@ -49,7 +56,10 @@ class AgentProjectController(
      * GET /api/agent/projects/dashboard
      */
     @GetMapping("/dashboard")
-    fun getDashboardProjects(@RequestHeader("X-User-ID") userId: Long): BaseResponse<List<ProjectResponse>> {
+    fun getDashboardProjects(): BaseResponse<List<ProjectResponse>> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.getDashboardProjects(userId)
         return BaseResponse.success(data = response)
     }
@@ -60,9 +70,11 @@ class AgentProjectController(
      */
     @GetMapping("/{projectId}")
     fun getSingleAgentProjectWithTasks(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable projectId: Long
     ): BaseResponse<ProjectResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.getSingleAgentProjectWithTasks(userId, projectId)
         return BaseResponse.success(data = response)
     }
@@ -73,10 +85,12 @@ class AgentProjectController(
      */
     @PutMapping("/{projectId}")
     fun updateAgentProject(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable projectId: Long,
         @Valid @RequestBody request: ProjectRequest
     ): BaseResponse<ProjectResponse> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.updateAgentProject(userId, projectId, request)
         return BaseResponse.success(data = response)
     }
@@ -87,9 +101,11 @@ class AgentProjectController(
      */
     @DeleteMapping("/{projectId}")
     fun deleteAgentProject(
-        @RequestHeader("X-User-ID") userId: Long,
         @PathVariable projectId: Long
     ): BaseResponse<Unit> {
+        val userId = (SecurityContextHolder.getContext().authentication.principal as CustomSecurityUserDetails).userId
+            ?: throw UserNotFoundException()
+
         val response = agentProjectService.deleteAgentProject(userId, projectId)
         return BaseResponse.success(data = response)
     }
